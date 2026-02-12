@@ -38,27 +38,40 @@ export class MessageService {
       }
     }
 
-    // 4. Send via Meta API
+    // 4. Get WhatsApp Account Info
+    const whatsappAccount = await prisma.whatsAppAccount.findUnique({
+      where: { tenantId },
+    });
+
+    if (!whatsappAccount) {
+      throw new Error("WhatsApp account not configured");
+    }
+
+    // 5. Send via Meta API
     let metaResponse;
     if (data.type === "template") {
       if (!data.templateName || !data.templateLanguage) {
         throw new Error("Template name and language required");
       }
       metaResponse = await metaAPI.sendTemplate({
+        phoneNumberId: whatsappAccount.phoneNumberId,
         phoneNumber: data.phoneNumber,
         templateName: data.templateName,
         languageCode: data.templateLanguage,
         components: data.content.components || [],
+        accessToken: whatsappAccount.accessToken,
       });
     } else {
       metaResponse = await metaAPI.sendMessage({
+        phoneNumberId: whatsappAccount.phoneNumberId,
         phoneNumber: data.phoneNumber,
         type: data.type,
         content: data.content,
+        accessToken: whatsappAccount.accessToken,
       });
     }
 
-    // 5. Store Message in DB
+    // 6. Store Message in DB
     const wamid = metaResponse?.messages?.[0]?.id || `wamid_${Date.now()}`;
 
     const message = await prisma.message.create({
@@ -74,7 +87,7 @@ export class MessageService {
       },
     });
 
-    // 6. Update Conversation
+    // 7. Update Conversation
     await prisma.conversation.update({
       where: { id: conversation.id },
       data: {

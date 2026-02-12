@@ -1,8 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { PrismaClient } from "@prisma/client";
 import { isInstalled } from "@/lib/installer";
-import fs from "fs";
-import path from "path";
+import { prisma } from "@/lib/prisma";
 
 // Increase API route timeout
 export const config = {
@@ -30,20 +28,10 @@ export default async function handler(
     });
   }
 
-  const prisma = new PrismaClient();
-
   try {
-    // Step 1: Test database connection with a timeout
-    const connectionPromise = prisma.$connect();
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error("Database connection timed out")), 5000)
-    );
-    
-    await Promise.race([connectionPromise, timeoutPromise]);
-    
-    // Test connection with search_path set
-    await prisma.$executeRaw`SET search_path TO public`;
-    await prisma.$executeRaw`SELECT 1`;
+    // Step 1: Test database connection
+    await prisma.$connect();
+    await prisma.$queryRaw`SELECT 1`;
 
     // Step 2: Check if tables exist
     const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
@@ -55,55 +43,15 @@ export default async function handler(
     const hasTables = tables.length > 0;
 
     if (!hasTables) {
-      // Tables don't exist - run migration SQL directly
-      console.log("Tables not found. Running SQL migration...");
-      
-      try {
-        // Read the migration SQL file
-        const migrationPath = path.join(process.cwd(), 'prisma', 'migrations', '20260212_init', 'migration.sql');
-        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-        
-        // Split SQL into individual statements and execute
-        const statements = migrationSQL
-          .split(';')
-          .map(s => s.trim())
-          .filter(s => s.length > 0 && !s.startsWith('--'));
-        
-        // Set search path first
-        await prisma.$executeRaw`SET search_path TO public`;
-        
-        // Execute each statement
-        for (const statement of statements) {
-          if (statement.trim()) {
-            await prisma.$executeRawUnsafe(statement);
-          }
-        }
-        
-        // Verify tables were created
-        const tablesAfterMigration = await prisma.$queryRaw<Array<{ tablename: string }>>`
-          SELECT tablename 
-          FROM pg_tables 
-          WHERE schemaname = 'public' AND tablename = 'SubscriptionPlan'
-        `;
-        
-        if (tablesAfterMigration.length === 0) {
-          throw new Error("Tables were not created after running migration");
-        }
-        
-        console.log("Database schema created successfully");
-      } catch (migrationError: any) {
-        console.error("Failed to create database schema:", migrationError);
-        return res.status(500).json({
-          error: "Failed to create database schema",
-          details: migrationError.message || "Could not run SQL migration",
-          instructions: [
-            "The automatic schema creation failed. Please manually run:",
-            "1. Connect to your Dokploy terminal",
-            "2. Run: cd /app && npx prisma migrate deploy",
-            "3. Come back and try again"
-          ]
-        });
-      }
+      return res.status(500).json({
+        error: "Database tables not initialized",
+        details: "Please run: npx prisma migrate deploy",
+        instructions: [
+          "1. Run: npx prisma migrate deploy",
+          "2. Then try initializing again",
+          "3. Or manually run: npm run setup:db"
+        ]
+      });
     }
 
     // Step 3: Check for existing data
@@ -125,9 +73,9 @@ export default async function handler(
       },
     });
 
-    // Step 5: Define Permissions
+    // Step 5: Create Roles with Permissions
     const rolePermissions = {
-      superAdmin: [
+      super_admin: [
         { resource: "tenants", action: "create" },
         { resource: "tenants", action: "read" },
         { resource: "tenants", action: "update" },
@@ -136,89 +84,82 @@ export default async function handler(
         { resource: "users", action: "read" },
         { resource: "users", action: "update" },
         { resource: "users", action: "delete" },
-        { resource: "roles", action: "create" },
-        { resource: "roles", action: "read" },
-        { resource: "roles", action: "update" },
-        { resource: "roles", action: "delete" },
-        { resource: "contacts", action: "create" },
-        { resource: "contacts", action: "read" },
-        { resource: "contacts", action: "update" },
-        { resource: "contacts", action: "delete" },
-        { resource: "messages", action: "create" },
-        { resource: "messages", action: "read" },
-        { resource: "campaigns", action: "create" },
-        { resource: "campaigns", action: "read" },
-        { resource: "campaigns", action: "update" },
-        { resource: "campaigns", action: "delete" },
       ],
       admin: [
         { resource: "users", action: "create" },
         { resource: "users", action: "read" },
-        { resource: "users", action: "update" },
         { resource: "contacts", action: "create" },
         { resource: "contacts", action: "read" },
-        { resource: "contacts", action: "update" },
-        { resource: "contacts", action: "delete" },
-        { resource: "messages", action: "create" },
-        { resource: "messages", action: "read" },
-        { resource: "campaigns", action: "create" },
-        { resource: "campaigns", action: "read" },
       ],
       manager: [
         { resource: "contacts", action: "read" },
-        { resource: "contacts", action: "update" },
         { resource: "messages", action: "create" },
         { resource: "messages", action: "read" },
-        { resource: "campaigns", action: "read" },
       ],
       agent: [
         { resource: "contacts", action: "read" },
         { resource: "messages", action: "create" },
-        { resource: "messages", action: "read" },
       ],
     };
 
-    // Helper to map permissions
-    const createPermissions = (roleType: keyof typeof rolePermissions) => {
-      return {
-        create: rolePermissions[roleType].map(p => ({
-          resource: p.resource,
-          action: p.action,
-          tenantId: systemTenant.id,
-        })),
-      };
-    };
-
     // Create roles
-    await prisma.role.create({
+    const superAdminRole = await prisma.role.create({
       data: {
-        name: "Super Admin",
+        name: "super_admin",
+        description: "Super Administrator with full access",
         tenantId: systemTenant.id,
-        permissions: createPermissions("superAdmin"),
+        permissions: {
+          create: rolePermissions.super_admin.map(p => ({
+            resource: p.resource,
+            action: p.action,
+            tenantId: systemTenant.id,
+          })),
+        },
       },
     });
 
     await prisma.role.create({
       data: {
-        name: "Admin",
+        name: "admin",
+        description: "Administrator",
         tenantId: systemTenant.id,
-        permissions: createPermissions("admin"),
+        permissions: {
+          create: rolePermissions.admin.map(p => ({
+            resource: p.resource,
+            action: p.action,
+            tenantId: systemTenant.id,
+          })),
+        },
       },
     });
 
     await prisma.role.create({
       data: {
-        name: "Manager",
+        name: "manager",
+        description: "Manager",
         tenantId: systemTenant.id,
-        permissions: createPermissions("manager"),
+        permissions: {
+          create: rolePermissions.manager.map(p => ({
+            resource: p.resource,
+            action: p.action,
+            tenantId: systemTenant.id,
+          })),
+        },
       },
     });
 
     await prisma.role.create({
       data: {
-        name: "Agent",
+        name: "agent",
+        description: "Agent",
         tenantId: systemTenant.id,
-        permissions: createPermissions("agent"),
+        permissions: {
+          create: rolePermissions.agent.map(p => ({
+            resource: p.resource,
+            action: p.action,
+            tenantId: systemTenant.id,
+          })),
+        },
       },
     });
 
@@ -304,22 +245,17 @@ export default async function handler(
       ],
     });
 
-    await prisma.$disconnect();
-
     return res.status(200).json({
       success: true,
       message: "Database initialized successfully",
       details: {
         tenant: systemTenant.name,
         roles: 4,
-        permissions: 22,
         plans: 4,
       },
     });
 
   } catch (error: any) {
-    await prisma.$disconnect();
-    
     console.error("Database initialization error:", error);
 
     const errorMessage = error.message || "Unknown error occurred";

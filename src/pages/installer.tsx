@@ -328,12 +328,15 @@ export default function InstallerPage() {
       const response = await fetch("/api/installer/create-admin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(adminData),
+        body: JSON.stringify({
+          adminData,
+          companyData
+        }),
       });
       
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to create admin");
+        throw new Error(data.detail || data.details || data.error || "Failed to create admin");
       }
       
       setCurrentStep(4);
@@ -351,21 +354,38 @@ export default function InstallerPage() {
       const response = await fetch("/api/installer/complete", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company: companyData,
-          saas: saasConfig,
-          email: emailConfig,
-          whatsapp: whatsappConfig,
-          preferences: systemPreferences,
-        }),
+      body: JSON.stringify({
+        companyName: companyData.name,
+        website: companyData.website || "",
+        email: emailConfig.senderEmail || companyData.email || "",
+        phone: companyData.phone || "",
+        address: companyData.address || "",
+        country: companyData.country || "",
+        currency: companyData.currency || "USD",
+        timezone: companyData.timezone || "UTC",
+        language: companyData.language || "en",
+        saasEnabled: saasConfig.enabled || false,
+        trialDuration: saasConfig.freeTrialDays || 14,
+        smtpHost: emailConfig.smtpHost,
+        smtpPort: emailConfig.smtpPort,
+        smtpUser: emailConfig.smtpUser,
+        smtpPassword: emailConfig.smtpPassword,
+        senderEmail: emailConfig.senderEmail,
+      }),
       });
       
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to complete installation");
+        throw new Error(data.detail || data.details || data.error || "Failed to complete installation");
       }
       
+      const result = await response.json();
       setCurrentStep(9);
+      
+      // Redirect to dashboard after short delay
+      setTimeout(() => {
+        window.location.href = result.redirectTo || "/dashboard";
+      }, 1500);
     } catch (err: any) {
       setError(err.message);
     } finally {

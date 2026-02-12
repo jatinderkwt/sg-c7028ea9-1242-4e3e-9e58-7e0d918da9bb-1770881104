@@ -22,7 +22,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(400).json({ error: "Template not submitted to Meta" });
       }
 
-      const status = await metaAPI.getTemplateStatus(template.metaId);
+      // Get WhatsApp account for businessAccountId
+      const whatsappAccount = await prisma.whatsAppAccount.findUnique({
+        where: { tenantId: session.tenantId },
+      });
+
+      if (!whatsappAccount) {
+        return res.status(400).json({ error: "WhatsApp account not configured" });
+      }
+
+      const status = await metaAPI.getTemplateStatus(
+        whatsappAccount.wabaId,
+        template.name
+      );
 
       // Update local status
       const updated = await prisma.template.update({

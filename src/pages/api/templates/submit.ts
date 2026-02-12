@@ -20,14 +20,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ error: "Template not found" });
       }
 
-      // Placeholder: Fetch WABA ID if needed, though metaAPI usually handles auth internally via env or DB
-      // const account = await prisma.whatsAppAccount.findUnique({ where: { tenantId: session.tenantId } });
+      // Get WhatsApp account for WABA ID
+      const whatsappAccount = await prisma.whatsAppAccount.findUnique({
+        where: { tenantId: session.tenantId },
+      });
+
+      if (!whatsappAccount) {
+        return res.status(400).json({ error: "WhatsApp account not configured" });
+      }
 
       const metaResponse = await metaAPI.createTemplate({
+        businessAccountId: whatsappAccount.wabaId,
         name: template.name,
         category: template.category,
         language: template.language,
         components: template.components as any[],
+        accessToken: whatsappAccount.accessToken,
       });
 
       await prisma.template.update({
