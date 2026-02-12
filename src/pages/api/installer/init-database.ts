@@ -1,9 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { isInstalled } from "@/lib/installer";
 import { prisma } from "@/lib/prisma";
-import { execSync } from "child_process";
+import { exec } from "child_process";
+import { promisify } from "util";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+const execAsync = promisify(exec);
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -11,318 +17,216 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const installed = await isInstalled();
     if (installed) {
-      return res.status(400).json({ error: "System is already installed" });
-    }
-
-    // Step 1: Generate Prisma Client
-    console.log("Step 1: Generating Prisma Client...");
-    try {
-      execSync("npx prisma generate", { 
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
+      return res.status(400).json({ 
+        error: "System already installed",
+        step: "validation"
       });
-      console.log("✓ Prisma Client generated");
-    } catch (error) {
-      console.error("Warning: Prisma generate failed, but continuing...", error);
     }
 
-    // Step 2: Create database tables
-    console.log("Step 2: Creating database tables...");
+    console.log("🚀 Starting database initialization...");
+
+    console.log("📦 Step 1: Generating Prisma Client...");
     try {
-      const isProd = process.env.NODE_ENV === "production";
-      
-      if (isProd) {
-        console.log("Running prisma db push for production...");
-        execSync("npx prisma db push --accept-data-loss --skip-generate", { 
-          stdio: "inherit",
-          env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
-        });
-      } else {
-        console.log("Running prisma migrate deploy...");
-        try {
-          execSync("npx prisma migrate deploy", { 
-            stdio: "inherit",
-            env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
-          });
-        } catch {
-          console.log("Migrations not found, using db push...");
-          execSync("npx prisma db push --accept-data-loss --skip-generate", { 
-            stdio: "inherit",
-            env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL }
-          });
+      await execAsync("npx prisma generate", {
+        cwd: process.cwd(),
+        env: { ...process.env }
+      });
+      console.log("✅ Prisma Client generated");
+    } catch (genError: any) {
+      console.error("❌ Prisma generate failed:", genError.message);
+      return res.status(500).json({ 
+        error: "Failed to generate Prisma Client",
+        details: genError.message,
+        step: "generate"
+      });
+    }
+
+    console.log("🔄 Step 2: Running migrations...");
+    try {
+      await execAsync("npx prisma migrate deploy", {
+        cwd: process.cwd(),
+        env: { ...process.env }
+      });
+      console.log("✅ Migrations completed");
+    } catch (migrateError: any) {
+      console.error("❌ Migration failed:", migrateError.message);
+      return res.status(500).json({ 
+        error: "Database migration failed",
+        details: migrateError.message,
+        step: "migrate"
+      });
+    }
+
+    console.log("🔍 Step 3: Checking existing data...");
+    const existingTenant = await prisma.tenant.findFirst();
+    
+    if (existingTenant) {
+      console.log("⚠️ Data already exists");
+      return res.status(200).json({ 
+        message: "Database initialized (data already exists)",
+        skipped: true
+      });
+    }
+
+    console.log("🏢 Step 4: Creating system tenant...");
+    const systemTenant = await prisma.tenant.create({
+      data: {
+        name: "System",
+        domain: "system.local",
+        isActive: true,
+        settings: {}
+      }
+    });
+    console.log("✅ System tenant created");
+
+    console.log("👥 Step 5: Creating roles with permissions...");
+    
+    await prisma.role.create({
+      data: {
+        name: "Super Admin",
+        description: "Full system access",
+        tenantId: systemTenant.id,
+        permissions: {
+          create: [
+            { tenantId: systemTenant.id, resource: "tenants", action: "create" },
+            { tenantId: systemTenant.id, resource: "tenants", action: "read" },
+            { tenantId: systemTenant.id, resource: "tenants", action: "update" },
+            { tenantId: systemTenant.id, resource: "tenants", action: "delete" },
+            { tenantId: systemTenant.id, resource: "users", action: "create" },
+            { tenantId: systemTenant.id, resource: "users", action: "read" },
+            { tenantId: systemTenant.id, resource: "users", action: "update" },
+            { tenantId: systemTenant.id, resource: "users", action: "delete" },
+            { tenantId: systemTenant.id, resource: "roles", action: "create" },
+            { tenantId: systemTenant.id, resource: "roles", action: "read" },
+            { tenantId: systemTenant.id, resource: "roles", action: "update" },
+            { tenantId: systemTenant.id, resource: "roles", action: "delete" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "create" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "delete" },
+            { tenantId: systemTenant.id, resource: "messages", action: "create" },
+            { tenantId: systemTenant.id, resource: "messages", action: "read" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "create" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "read" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "update" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "delete" }
+          ]
         }
       }
-      console.log("✓ Database tables created successfully");
-    } catch (error: any) {
-      const errorMessage = error?.message || "Unknown error";
-      return res.status(500).json({ 
-        error: "Failed to create database schema",
-        details: errorMessage,
-        suggestion: "Please ensure your DATABASE_URL is correct and PostgreSQL is accessible"
-      });
-    }
-
-    // Step 3: Create System Tenant (required for default roles)
-    console.log("Step 3: Creating system tenant...");
-    let systemTenant = await prisma.tenant.findFirst({
-      where: { domain: "system" }
     });
 
-    if (!systemTenant) {
-      systemTenant = await prisma.tenant.create({
-        data: {
-          name: "System",
-          domain: "system",
-          email: "admin@system.local",
-          isActive: true,
-          settings: {}
-        }
-      });
-      console.log("✓ Created system tenant");
-    } else {
-      console.log("✓ System tenant already exists");
-    }
-
-    // Step 4: Create default roles in system tenant
-    console.log("Step 4: Creating default roles...");
-    const roleDefinitions = [
-      { name: "Super Admin", description: "Full system access across all tenants" },
-      { name: "Admin", description: "Company administrator with full tenant access" },
-      { name: "Manager", description: "Team manager with limited administrative access" },
-      { name: "Agent", description: "Support agent with basic access" }
-    ];
-
-    const createdRoles = [];
-    for (const roleDef of roleDefinitions) {
-      let role = await prisma.role.findFirst({
-        where: { 
-          name: roleDef.name,
-          tenantId: systemTenant.id
-        }
-      });
-
-      if (!role) {
-        role = await prisma.role.create({
-          data: {
-            name: roleDef.name,
-            description: roleDef.description,
-            tenantId: systemTenant.id
-          }
-        });
-        console.log(`✓ Created role: ${roleDef.name}`);
-      } else {
-        console.log(`✓ Role already exists: ${roleDef.name}`);
-      }
-      createdRoles.push(role);
-    }
-
-    // Step 5: Create permissions for Super Admin role
-    console.log("Step 5: Creating permissions...");
-    const superAdminRole = createdRoles.find(r => r.name === "Super Admin");
-    
-    if (superAdminRole) {
-      const permissionDefinitions = [
-        // Users
-        { resource: "users", action: "create" },
-        { resource: "users", action: "read" },
-        { resource: "users", action: "update" },
-        { resource: "users", action: "delete" },
-        
-        // Contacts
-        { resource: "contacts", action: "create" },
-        { resource: "contacts", action: "read" },
-        { resource: "contacts", action: "update" },
-        { resource: "contacts", action: "delete" },
-        
-        // Conversations
-        { resource: "conversations", action: "read" },
-        { resource: "conversations", action: "update" },
-        { resource: "conversations", action: "assign" },
-        
-        // Messages
-        { resource: "messages", action: "send" },
-        { resource: "messages", action: "read" },
-        
-        // Templates
-        { resource: "templates", action: "create" },
-        { resource: "templates", action: "read" },
-        { resource: "templates", action: "update" },
-        { resource: "templates", action: "delete" },
-        { resource: "templates", action: "submit" },
-        
-        // Campaigns
-        { resource: "campaigns", action: "create" },
-        { resource: "campaigns", action: "read" },
-        { resource: "campaigns", action: "update" },
-        { resource: "campaigns", action: "delete" },
-        
-        // Automations
-        { resource: "automations", action: "create" },
-        { resource: "automations", action: "read" },
-        { resource: "automations", action: "update" },
-        { resource: "automations", action: "delete" },
-        
-        // Analytics
-        { resource: "analytics", action: "read" },
-        { resource: "analytics", action: "export" },
-        
-        // Settings
-        { resource: "settings", action: "read" },
-        { resource: "settings", action: "update" },
-        
-        // Tenants (Super Admin only)
-        { resource: "tenants", action: "create" },
-        { resource: "tenants", action: "read" },
-        { resource: "tenants", action: "update" },
-        { resource: "tenants", action: "delete" },
-        
-        // Billing
-        { resource: "billing", action: "read" },
-        { resource: "billing", action: "update" }
-      ];
-
-      for (const permDef of permissionDefinitions) {
-        const existing = await prisma.permission.findFirst({
-          where: {
-            roleId: superAdminRole.id,
-            resource: permDef.resource,
-            action: permDef.action
-          }
-        });
-
-        if (!existing) {
-          await prisma.permission.create({
-            data: {
-              roleId: superAdminRole.id,
-              resource: permDef.resource,
-              action: permDef.action,
-              tenantId: systemTenant.id
-            }
-          });
+    await prisma.role.create({
+      data: {
+        name: "Admin",
+        description: "Company administration",
+        tenantId: systemTenant.id,
+        permissions: {
+          create: [
+            { tenantId: systemTenant.id, resource: "users", action: "create" },
+            { tenantId: systemTenant.id, resource: "users", action: "read" },
+            { tenantId: systemTenant.id, resource: "users", action: "update" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "create" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "delete" },
+            { tenantId: systemTenant.id, resource: "messages", action: "create" },
+            { tenantId: systemTenant.id, resource: "messages", action: "read" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "create" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "read" }
+          ]
         }
       }
-      console.log(`✓ Created ${permissionDefinitions.length} permissions for Super Admin`);
-    }
+    });
 
-    // Step 6: Create subscription plans
-    console.log("Step 6: Creating subscription plans...");
-    const plans = [
-      {
-        name: "Free",
-        description: "Basic features for getting started",
-        price: 0,
-        currency: "USD",
-        billingCycle: "monthly",
-        isActive: true,
-        features: {
-          maxUsers: 1,
-          maxContacts: 100,
-          maxMessages: 500,
-          maxTemplates: 5,
-          maxCampaigns: 2,
-          hasAutomation: false,
-          hasAnalytics: false,
-          hasCRM: false,
-          hasAPI: false,
-          support: "email"
-        }
-      },
-      {
-        name: "Starter",
-        description: "Perfect for small teams",
-        price: 29,
-        currency: "USD",
-        billingCycle: "monthly",
-        isActive: true,
-        features: {
-          maxUsers: 3,
-          maxContacts: 1000,
-          maxMessages: 5000,
-          maxTemplates: 20,
-          maxCampaigns: 10,
-          hasAutomation: true,
-          hasAnalytics: true,
-          hasCRM: true,
-          hasAPI: false,
-          support: "email"
-        }
-      },
-      {
-        name: "Professional",
-        description: "For growing businesses",
-        price: 99,
-        currency: "USD",
-        billingCycle: "monthly",
-        isActive: true,
-        features: {
-          maxUsers: 10,
-          maxContacts: 10000,
-          maxMessages: 50000,
-          maxTemplates: 100,
-          maxCampaigns: 50,
-          hasAutomation: true,
-          hasAnalytics: true,
-          hasCRM: true,
-          hasAPI: true,
-          support: "priority"
-        }
-      },
-      {
-        name: "Enterprise",
-        description: "Unlimited features for large organizations",
-        price: 299,
-        currency: "USD",
-        billingCycle: "monthly",
-        isActive: true,
-        features: {
-          maxUsers: -1,
-          maxContacts: -1,
-          maxMessages: -1,
-          maxTemplates: -1,
-          maxCampaigns: -1,
-          hasAutomation: true,
-          hasAnalytics: true,
-          hasCRM: true,
-          hasAPI: true,
-          support: "dedicated"
+    await prisma.role.create({
+      data: {
+        name: "Manager",
+        description: "Team management",
+        tenantId: systemTenant.id,
+        permissions: {
+          create: [
+            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
+            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
+            { tenantId: systemTenant.id, resource: "messages", action: "create" },
+            { tenantId: systemTenant.id, resource: "messages", action: "read" },
+            { tenantId: systemTenant.id, resource: "campaigns", action: "read" }
+          ]
         }
       }
-    ];
+    });
 
-    for (const plan of plans) {
-      const existing = await prisma.subscriptionPlan.findFirst({
-        where: { name: plan.name }
-      });
-      if (!existing) {
-        await prisma.subscriptionPlan.create({ data: plan });
-        console.log(`✓ Created subscription plan: ${plan.name}`);
-      } else {
-        console.log(`✓ Subscription plan already exists: ${plan.name}`);
+    await prisma.role.create({
+      data: {
+        name: "Agent",
+        description: "Handle conversations",
+        tenantId: systemTenant.id,
+        permissions: {
+          create: [
+            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
+            { tenantId: systemTenant.id, resource: "messages", action: "create" },
+            { tenantId: systemTenant.id, resource: "messages", action: "read" }
+          ]
+        }
       }
-    }
+    });
 
-    console.log("✓ Database initialization complete!");
+    console.log("✅ Roles created");
 
-    return res.status(200).json({
-      success: true,
+    console.log("💰 Step 6: Creating subscription plans...");
+    await prisma.subscriptionPlan.createMany({
+      data: [
+        {
+          name: "Free",
+          description: "Basic plan",
+          price: 0,
+          billingCycle: "monthly",
+          features: { messageLimit: 500 },
+          isActive: true
+        },
+        {
+          name: "Starter",
+          description: "Growing businesses",
+          price: 4900,
+          billingCycle: "monthly",
+          features: { messageLimit: 5000 },
+          isActive: true
+        },
+        {
+          name: "Professional",
+          description: "Advanced features",
+          price: 14900,
+          billingCycle: "monthly",
+          features: { messageLimit: 25000 },
+          isActive: true
+        },
+        {
+          name: "Enterprise",
+          description: "Unlimited",
+          price: 49900,
+          billingCycle: "monthly",
+          features: { messageLimit: -1 },
+          isActive: true
+        }
+      ]
+    });
+    console.log("✅ Subscription plans created");
+
+    console.log("🎉 Database initialization complete!");
+
+    return res.status(200).json({ 
       message: "Database initialized successfully",
       details: {
-        systemTenantId: systemTenant.id,
-        roles: roleDefinitions.length,
-        permissions: 52,
-        plans: plans.length
+        tenant: systemTenant.id,
+        roles: 4,
+        subscriptionPlans: 4
       }
     });
 
   } catch (error: any) {
-    console.error("Database initialization error:", error);
-    const errorMessage = error?.message || "Unknown error";
-    const errorStack = error?.stack || "";
-    
+    console.error("💥 Error:", error);
     return res.status(500).json({ 
       error: "Database initialization failed",
-      details: errorMessage,
-      stack: process.env.NODE_ENV === "development" ? errorStack : undefined
+      details: error.message || "Unknown error"
     });
   }
 }
