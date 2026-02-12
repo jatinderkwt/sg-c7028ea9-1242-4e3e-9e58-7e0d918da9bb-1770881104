@@ -5,7 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public"]
 }
 
 model Tenant {
@@ -30,8 +29,6 @@ model Tenant {
   whatsappAccount WhatsAppAccount?
   subscription  Subscription?
   auditLogs     AuditLog[]
-
-  @@schema("public")
 }
 
 model User {
@@ -56,7 +53,6 @@ model User {
   auditLogs             AuditLog[]
 
   @@unique([tenantId, email])
-  @@schema("public")
 }
 
 model Role {
@@ -72,7 +68,6 @@ model Role {
   permissions Permission[]
 
   @@unique([tenantId, name])
-  @@schema("public")
 }
 
 model Permission {
@@ -87,7 +82,6 @@ model Permission {
   role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   
   @@unique([roleId, resource, action])
-  @@schema("public")
 }
 
 model SubscriptionPlan {
@@ -102,8 +96,6 @@ model SubscriptionPlan {
   updatedAt    DateTime @updatedAt
 
   subscriptions Subscription[]
-
-  @@schema("public")
 }
 
 model Subscription {
@@ -119,8 +111,6 @@ model Subscription {
 
   tenant    Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   plan      SubscriptionPlan @relation(fields: [planId], references: [id])
-
-  @@schema("public")
 }
 
 model WhatsAppAccount {
@@ -136,8 +126,6 @@ model WhatsAppAccount {
   updatedAt     DateTime @updatedAt
 
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@schema("public")
 }
 
 model Contact {
@@ -161,7 +149,6 @@ model Contact {
   tasks          Task[]
 
   @@unique([tenantId, phoneNumber])
-  @@schema("public")
 }
 
 model Conversation {
@@ -179,8 +166,6 @@ model Conversation {
   contact      Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
   assignedTo   User?     @relation(fields: [assignedToId], references: [id])
   messages     Message[]
-
-  @@schema("public")
 }
 
 model Message {
@@ -198,8 +183,6 @@ model Message {
 
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User?        @relation(fields: [senderId], references: [id])
-
-  @@schema("public")
 }
 
 model Template {
@@ -218,7 +201,6 @@ model Template {
   campaigns   Campaign[]
 
   @@unique([tenantId, name, language])
-  @@schema("public")
 }
 
 model Campaign {
@@ -235,8 +217,6 @@ model Campaign {
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   template    Template @relation(fields: [templateId], references: [id])
-
-  @@schema("public")
 }
 
 model Automation {
@@ -252,8 +232,6 @@ model Automation {
   updatedAt   DateTime @updatedAt
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@schema("public")
 }
 
 model Deal {
@@ -272,8 +250,6 @@ model Deal {
   tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   contact      Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
   assignedUser User?    @relation(fields: [assignedUserId], references: [id])
-
-  @@schema("public")
 }
 
 model Task {
@@ -293,8 +269,6 @@ model Task {
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   contact        Contact? @relation(fields: [contactId], references: [id])
   assignedUser   User?    @relation(fields: [assignedUserId], references: [id])
-
-  @@schema("public")
 }
 
 model AuditLog {
@@ -314,5 +288,4 @@ model AuditLog {
   @@index([tenantId])
   @@index([resourceType])
   @@index([createdAt])
-  @@schema("public")
 }
