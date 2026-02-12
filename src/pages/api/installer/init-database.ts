@@ -1,6 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import { isInstalled } from "@/lib/installer";
+import { exec } from "child_process";
+import { promisify } from "util";
+
+const execPromise = promisify(exec);
 
 // Increase API route timeout
 export const config = {
@@ -41,7 +45,6 @@ export default async function handler(
     await prisma.$executeRaw`SELECT 1`;
 
     // Step 2: Check if tables exist
-    // This query checks specifically for the SubscriptionPlan table in the public schema
     const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
       SELECT tablename 
       FROM pg_tables 
@@ -51,21 +54,41 @@ export default async function handler(
     const hasTables = tables.length > 0;
 
     if (!hasTables) {
-      // Tables don't exist - return 400 with specific instructions
-      // We do NOT try to run migrations here to avoid timeouts/crashes
-      return res.status(400).json({
-        error: "Database schema not initialized",
-        details: "The database tables have not been created yet.",
-        instructions: [
-          "1. Go to your Dokploy Dashboard",
-          "2. Edit the DATABASE_URL environment variable",
-          "3. Append '?schema=public' to the end of the URL",
-          "   Example: postgresql://user:pass@host:port/db?schema=public",
-          "4. Save and Redeploy the application",
-          "5. If tables are still not created, run 'npx prisma db push' in the Dokploy terminal"
-        ],
-        requiresAction: true
-      });
+      // Tables don't exist - run Prisma db push to create them
+      console.log("Tables not found. Running Prisma db push...");
+      
+      try {
+        const { stdout, stderr } = await execPromise("npx prisma db push --skip-generate --accept-data-loss");
+        console.log("Prisma db push output:", stdout);
+        if (stderr) {
+          console.log("Prisma db push stderr:", stderr);
+        }
+        
+        // Verify tables were created
+        const tablesAfterPush = await prisma.$queryRaw<Array<{ tablename: string }>>`
+          SELECT tablename 
+          FROM pg_tables 
+          WHERE schemaname = 'public' AND tablename = 'SubscriptionPlan'
+        `;
+        
+        if (tablesAfterPush.length === 0) {
+          throw new Error("Tables were not created after running db push");
+        }
+        
+        console.log("Database schema created successfully");
+      } catch (pushError: any) {
+        console.error("Failed to create database schema:", pushError);
+        return res.status(500).json({
+          error: "Failed to create database schema",
+          details: pushError.message || "Could not run Prisma db push",
+          instructions: [
+            "The automatic schema creation failed. Please manually run:",
+            "1. Connect to your Dokploy terminal",
+            "2. Run: npx prisma db push",
+            "3. Come back and try again"
+          ]
+        });
+      }
     }
 
     // Step 3: Check for existing data
@@ -79,7 +102,6 @@ export default async function handler(
     }
 
     // Step 4: Create System Tenant
-    // Schema: name, domain, isActive (default true)
     const systemTenant = await prisma.tenant.create({
       data: {
         name: "System",
@@ -186,7 +208,6 @@ export default async function handler(
     });
 
     // Step 6: Create Subscription Plans
-    // Schema: name, description, price, billingCycle, features, isActive
     await prisma.subscriptionPlan.createMany({
       data: [
         {
@@ -211,7 +232,7 @@ export default async function handler(
         {
           name: "Starter",
           description: "Perfect for small businesses",
-          price: 4900, // Cents
+          price: 4900,
           billingCycle: "MONTHLY",
           features: {
             messages: 5000,
@@ -230,7 +251,7 @@ export default async function handler(
         {
           name: "Professional",
           description: "Advanced features for growing companies",
-          price: 14900, // Cents
+          price: 14900,
           billingCycle: "MONTHLY",
           features: {
             messages: 25000,
@@ -249,7 +270,7 @@ export default async function handler(
         {
           name: "Enterprise",
           description: "Unlimited features for large organizations",
-          price: 49900, // Cents
+          price: 49900,
           billingCycle: "MONTHLY",
           features: {
             messages: -1,
