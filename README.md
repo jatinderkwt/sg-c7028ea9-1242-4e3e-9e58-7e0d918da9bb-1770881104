@@ -2,45 +2,11 @@
 
 **Production-Ready Multi-Tenant SaaS with Full Meta WhatsApp Cloud API Compliance**
 
----
+## 🎯 Quick Start
 
-## ⚡ QUICK START FOR DOKPLOY DEPLOYMENT
+**Deploying to Dokploy?** → See [DOKPLOY-SETUP.md](./DOKPLOY-SETUP.md) for step-by-step guide
 
-If you're deploying to Dokploy and the installer shows all checks failing, you need to set these environment variables first:
-
-### **Required Environment Variables (Add in Dokploy)**
-
-```bash
-# Authentication (CRITICAL - Generate these!)
-NEXTAUTH_SECRET="your-32-character-secret-here"
-NEXTAUTH_URL="https://yourdomain.com"
-
-# Encryption (CRITICAL - Generate this!)
-ENCRYPTION_KEY="your-64-character-hex-key-here"
-
-# App Configuration
-NEXT_PUBLIC_APP_URL="https://yourdomain.com"
-NODE_ENV="production"
-
-# Database
-DATABASE_URL="your-postgresql-connection-string"
-```
-
-### **Generate Keys:**
-```bash
-# Generate NEXTAUTH_SECRET
-openssl rand -base64 32
-
-# Generate ENCRYPTION_KEY
-openssl rand -hex 32
-```
-
-**After setting these variables:**
-1. Redeploy in Dokploy
-2. Visit `/installer`
-3. System checks should pass ✅
-
-📖 **Full Dokploy deployment guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md)
+**Local Development?** → Continue below
 
 ---
 
