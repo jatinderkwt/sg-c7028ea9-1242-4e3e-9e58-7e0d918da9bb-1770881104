@@ -21,7 +21,7 @@ type SystemCheck = {
 type InstallStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 const TIMEZONES = [
-  // Americas
+  // Americas - North America
   { value: "America/New_York", label: "America/New York (EST/EDT)" },
   { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
   { value: "America/Denver", label: "America/Denver (MST/MDT)" },
@@ -30,60 +30,126 @@ const TIMEZONES = [
   { value: "America/Phoenix", label: "America/Phoenix (MST)" },
   { value: "America/Toronto", label: "America/Toronto (EST/EDT)" },
   { value: "America/Vancouver", label: "America/Vancouver (PST/PDT)" },
+  { value: "America/Edmonton", label: "America/Edmonton (MST/MDT)" },
+  { value: "America/Winnipeg", label: "America/Winnipeg (CST/CDT)" },
+  { value: "America/Halifax", label: "America/Halifax (AST/ADT)" },
+  { value: "America/St_Johns", label: "America/St Johns (NST/NDT)" },
+  
+  // Americas - Central America & Caribbean
   { value: "America/Mexico_City", label: "America/Mexico City (CST/CDT)" },
+  { value: "America/Cancun", label: "America/Cancun (EST)" },
+  { value: "America/Tijuana", label: "America/Tijuana (PST/PDT)" },
+  { value: "America/Guatemala", label: "America/Guatemala (CST)" },
+  { value: "America/Belize", label: "America/Belize (CST)" },
+  { value: "America/Costa_Rica", label: "America/Costa Rica (CST)" },
+  { value: "America/Panama", label: "America/Panama (EST)" },
+  { value: "America/Havana", label: "America/Havana (CST/CDT)" },
+  { value: "America/Jamaica", label: "America/Jamaica (EST)" },
+  { value: "America/Puerto_Rico", label: "America/Puerto Rico (AST)" },
+  
+  // Americas - South America
   { value: "America/Bogota", label: "America/Bogota (COT)" },
   { value: "America/Lima", label: "America/Lima (PET)" },
   { value: "America/Santiago", label: "America/Santiago (CLT/CLST)" },
   { value: "America/Sao_Paulo", label: "America/Sao Paulo (BRT/BRST)" },
   { value: "America/Argentina/Buenos_Aires", label: "America/Buenos Aires (ART)" },
   { value: "America/Caracas", label: "America/Caracas (VET)" },
+  { value: "America/Montevideo", label: "America/Montevideo (UYT)" },
+  { value: "America/La_Paz", label: "America/La Paz (BOT)" },
+  { value: "America/Asuncion", label: "America/Asuncion (PYT/PYST)" },
+  { value: "America/Guayaquil", label: "America/Guayaquil (ECT)" },
   
-  // Europe
+  // Europe - Western Europe
   { value: "Europe/London", label: "Europe/London (GMT/BST)" },
-  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
-  { value: "Europe/Berlin", label: "Europe/Berlin (CET/CEST)" },
-  { value: "Europe/Rome", label: "Europe/Rome (CET/CEST)" },
-  { value: "Europe/Madrid", label: "Europe/Madrid (CET/CEST)" },
-  { value: "Europe/Amsterdam", label: "Europe/Amsterdam (CET/CEST)" },
-  { value: "Europe/Brussels", label: "Europe/Brussels (CET/CEST)" },
-  { value: "Europe/Vienna", label: "Europe/Vienna (CET/CEST)" },
-  { value: "Europe/Warsaw", label: "Europe/Warsaw (CET/CEST)" },
-  { value: "Europe/Stockholm", label: "Europe/Stockholm (CET/CEST)" },
-  { value: "Europe/Athens", label: "Europe/Athens (EET/EEST)" },
-  { value: "Europe/Istanbul", label: "Europe/Istanbul (TRT)" },
-  { value: "Europe/Moscow", label: "Europe/Moscow (MSK)" },
   { value: "Europe/Dublin", label: "Europe/Dublin (GMT/IST)" },
   { value: "Europe/Lisbon", label: "Europe/Lisbon (WET/WEST)" },
+  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
+  { value: "Europe/Madrid", label: "Europe/Madrid (CET/CEST)" },
+  { value: "Europe/Brussels", label: "Europe/Brussels (CET/CEST)" },
+  { value: "Europe/Amsterdam", label: "Europe/Amsterdam (CET/CEST)" },
+  { value: "Europe/Luxembourg", label: "Europe/Luxembourg (CET/CEST)" },
   
-  // Asia
+  // Europe - Central Europe
+  { value: "Europe/Berlin", label: "Europe/Berlin (CET/CEST)" },
+  { value: "Europe/Rome", label: "Europe/Rome (CET/CEST)" },
+  { value: "Europe/Vienna", label: "Europe/Vienna (CET/CEST)" },
+  { value: "Europe/Warsaw", label: "Europe/Warsaw (CET/CEST)" },
+  { value: "Europe/Prague", label: "Europe/Prague (CET/CEST)" },
+  { value: "Europe/Budapest", label: "Europe/Budapest (CET/CEST)" },
+  { value: "Europe/Zurich", label: "Europe/Zurich (CET/CEST)" },
+  { value: "Europe/Stockholm", label: "Europe/Stockholm (CET/CEST)" },
+  { value: "Europe/Copenhagen", label: "Europe/Copenhagen (CET/CEST)" },
+  { value: "Europe/Oslo", label: "Europe/Oslo (CET/CEST)" },
+  
+  // Europe - Eastern Europe
+  { value: "Europe/Athens", label: "Europe/Athens (EET/EEST)" },
+  { value: "Europe/Istanbul", label: "Europe/Istanbul (TRT)" },
+  { value: "Europe/Helsinki", label: "Europe/Helsinki (EET/EEST)" },
+  { value: "Europe/Bucharest", label: "Europe/Bucharest (EET/EEST)" },
+  { value: "Europe/Sofia", label: "Europe/Sofia (EET/EEST)" },
+  { value: "Europe/Kiev", label: "Europe/Kiev (EET/EEST)" },
+  { value: "Europe/Moscow", label: "Europe/Moscow (MSK)" },
+  { value: "Europe/Minsk", label: "Europe/Minsk (MSK)" },
+  
+  // Asia - Middle East
   { value: "Asia/Dubai", label: "Asia/Dubai (GST)" },
+  { value: "Asia/Riyadh", label: "Asia/Riyadh (AST)" },
+  { value: "Asia/Kuwait", label: "Asia/Kuwait (AST)" },
+  { value: "Asia/Doha", label: "Asia/Doha (AST)" },
+  { value: "Asia/Bahrain", label: "Asia/Bahrain (AST)" },
+  { value: "Asia/Tehran", label: "Asia/Tehran (IRST/IRDT)" },
+  { value: "Asia/Jerusalem", label: "Asia/Jerusalem (IST/IDT)" },
+  { value: "Asia/Beirut", label: "Asia/Beirut (EET/EEST)" },
+  { value: "Asia/Amman", label: "Asia/Amman (EET/EEST)" },
+  
+  // Asia - South Asia
   { value: "Asia/Karachi", label: "Asia/Karachi (PKT)" },
   { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
   { value: "Asia/Mumbai", label: "Asia/Mumbai (IST)" },
   { value: "Asia/Dhaka", label: "Asia/Dhaka (BST)" },
+  { value: "Asia/Colombo", label: "Asia/Colombo (IST)" },
+  { value: "Asia/Kathmandu", label: "Asia/Kathmandu (NPT)" },
+  
+  // Asia - Southeast Asia
   { value: "Asia/Bangkok", label: "Asia/Bangkok (ICT)" },
   { value: "Asia/Singapore", label: "Asia/Singapore (SGT)" },
+  { value: "Asia/Jakarta", label: "Asia/Jakarta (WIB)" },
+  { value: "Asia/Manila", label: "Asia/Manila (PHT)" },
+  { value: "Asia/Kuala_Lumpur", label: "Asia/Kuala Lumpur (MYT)" },
+  { value: "Asia/Ho_Chi_Minh", label: "Asia/Ho Chi Minh (ICT)" },
+  { value: "Asia/Yangon", label: "Asia/Yangon (MMT)" },
+  { value: "Asia/Phnom_Penh", label: "Asia/Phnom Penh (ICT)" },
+  
+  // Asia - East Asia
   { value: "Asia/Hong_Kong", label: "Asia/Hong Kong (HKT)" },
   { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
   { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
   { value: "Asia/Seoul", label: "Asia/Seoul (KST)" },
-  { value: "Asia/Manila", label: "Asia/Manila (PHT)" },
-  { value: "Asia/Jakarta", label: "Asia/Jakarta (WIB)" },
-  { value: "Asia/Kuala_Lumpur", label: "Asia/Kuala Lumpur (MYT)" },
   { value: "Asia/Taipei", label: "Asia/Taipei (CST)" },
-  { value: "Asia/Tehran", label: "Asia/Tehran (IRST/IRDT)" },
-  { value: "Asia/Jerusalem", label: "Asia/Jerusalem (IST/IDT)" },
-  { value: "Asia/Riyadh", label: "Asia/Riyadh (AST)" },
+  { value: "Asia/Macau", label: "Asia/Macau (CST)" },
   
-  // Pacific
+  // Asia - Central Asia
+  { value: "Asia/Almaty", label: "Asia/Almaty (ALMT)" },
+  { value: "Asia/Tashkent", label: "Asia/Tashkent (UZT)" },
+  { value: "Asia/Baku", label: "Asia/Baku (AZT)" },
+  { value: "Asia/Yerevan", label: "Asia/Yerevan (AMT)" },
+  
+  // Pacific - Australia
   { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
   { value: "Australia/Melbourne", label: "Australia/Melbourne (AEST/AEDT)" },
   { value: "Australia/Brisbane", label: "Australia/Brisbane (AEST)" },
   { value: "Australia/Perth", label: "Australia/Perth (AWST)" },
   { value: "Australia/Adelaide", label: "Australia/Adelaide (ACST/ACDT)" },
+  { value: "Australia/Darwin", label: "Australia/Darwin (ACST)" },
+  { value: "Australia/Hobart", label: "Australia/Hobart (AEST/AEDT)" },
+  
+  // Pacific - New Zealand & Islands
   { value: "Pacific/Auckland", label: "Pacific/Auckland (NZST/NZDT)" },
   { value: "Pacific/Fiji", label: "Pacific/Fiji (FJT/FJST)" },
   { value: "Pacific/Honolulu", label: "Pacific/Honolulu (HST)" },
+  { value: "Pacific/Guam", label: "Pacific/Guam (ChST)" },
+  { value: "Pacific/Port_Moresby", label: "Pacific/Port Moresby (PGT)" },
+  { value: "Pacific/Tahiti", label: "Pacific/Tahiti (TAHT)" },
   
   // Africa
   { value: "Africa/Cairo", label: "Africa/Cairo (EET)" },
@@ -91,6 +157,15 @@ const TIMEZONES = [
   { value: "Africa/Lagos", label: "Africa/Lagos (WAT)" },
   { value: "Africa/Nairobi", label: "Africa/Nairobi (EAT)" },
   { value: "Africa/Casablanca", label: "Africa/Casablanca (WET/WEST)" },
+  { value: "Africa/Algiers", label: "Africa/Algiers (CET)" },
+  { value: "Africa/Tunis", label: "Africa/Tunis (CET)" },
+  { value: "Africa/Accra", label: "Africa/Accra (GMT)" },
+  { value: "Africa/Addis_Ababa", label: "Africa/Addis Ababa (EAT)" },
+  { value: "Africa/Dar_es_Salaam", label: "Africa/Dar es Salaam (EAT)" },
+  { value: "Africa/Kampala", label: "Africa/Kampala (EAT)" },
+  { value: "Africa/Khartoum", label: "Africa/Khartoum (CAT)" },
+  { value: "Africa/Kinshasa", label: "Africa/Kinshasa (WAT)" },
+  { value: "Africa/Maputo", label: "Africa/Maputo (CAT)" },
   
   // UTC
   { value: "UTC", label: "UTC (Coordinated Universal Time)" },
@@ -180,7 +255,6 @@ export default function InstallerPage() {
         return;
       }
       
-      // Ensure checks is always an array with valid structure
       const checks = Array.isArray(data.checks) ? data.checks : [];
       const validChecks = checks.map(check => ({
         name: check?.name || "Unknown Check",
@@ -217,7 +291,6 @@ export default function InstallerPage() {
       const data = await response.json();
       
       if (!response.ok) {
-        // Show detailed error with instructions if available
         if (data.instructions) {
           const instructionsText = Array.isArray(data.instructions) 
             ? data.instructions.join('\n') 
@@ -366,7 +439,6 @@ export default function InstallerPage() {
 
           <div className="space-y-3">
             {systemChecks.map((check, index) => {
-              // Safety check - ensure check object exists
               if (!check || typeof check !== 'object') return null;
               
               const checkName = check.name || "Unknown Check";
@@ -517,21 +589,20 @@ export default function InstallerPage() {
                     <li>22 permissions across all resources</li>
                     <li>4 subscription plans (Free, Starter, Professional, Enterprise)</li>
                   </ul>
+                  <Button onClick={initializeDatabase} disabled={loading} className="w-full">
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Database className="mr-2 h-4 w-4" />
+                    Initialize Database
+                  </Button>
                 </div>
               )}
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(1)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-              </div>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={() => setCurrentStep(1)}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
-              <Button onClick={() => setCurrentStep(3)}>
+              <Button onClick={() => setCurrentStep(3)} disabled={!dbInitialized}>
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -547,6 +618,13 @@ export default function InstallerPage() {
               <CardDescription>Set up your administrator account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name *</Label>
@@ -622,17 +700,16 @@ export default function InstallerPage() {
                   </Select>
                 </div>
               </div>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(2)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={createAdmin} disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Admin <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(2)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={createAdmin} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Admin <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
@@ -720,17 +797,47 @@ export default function InstallerPage() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(3)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setCurrentStep(5)}>
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="companyTimezone">Timezone</Label>
+                  <Select value={companyData.timezone} onValueChange={(v) => setCompanyData({ ...companyData, timezone: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="companyLanguage">Language</Label>
+                  <Select value={companyData.language} onValueChange={(v) => setCompanyData({ ...companyData, language: v })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="fr">French</SelectItem>
+                      <SelectItem value="de">German</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(3)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={() => setCurrentStep(5)}>
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
@@ -777,16 +884,15 @@ export default function InstallerPage() {
                   </SelectContent>
                 </Select>
               </div>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(4)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setCurrentStep(6)}>
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(4)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={() => setCurrentStep(6)}>
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
@@ -865,19 +971,18 @@ export default function InstallerPage() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  You can configure WhatsApp credentials later from the admin dashboard if needed.
+                  You can configure email settings later from the admin dashboard if needed.
                 </AlertDescription>
               </Alert>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(5)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setCurrentStep(7)}>
-                  Skip <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(5)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={() => setCurrentStep(7)}>
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
@@ -927,7 +1032,7 @@ export default function InstallerPage() {
                     id="webhookUrl"
                     value={whatsappConfig.webhookUrl}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, webhookUrl: e.target.value })}
-                    placeholder="https://yourdomain.com/api/auth/login"
+                    placeholder="https://yourdomain.com/api/webhook/whatsapp"
                   />
                 </div>
                 
@@ -949,16 +1054,15 @@ export default function InstallerPage() {
                   You can configure WhatsApp credentials later from the admin dashboard if needed.
                 </AlertDescription>
               </Alert>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(6)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={() => setCurrentStep(8)}>
-                  Skip <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(6)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={() => setCurrentStep(8)}>
+                Continue <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
@@ -1042,17 +1146,16 @@ export default function InstallerPage() {
                   />
                 </div>
               </div>
-              
-              <div className="flex justify-between gap-3 mt-6">
-                <Button onClick={() => setCurrentStep(7)} variant="outline">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button onClick={completeInstallation} disabled={loading}>
-                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Complete Installation <CheckCircle className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button onClick={() => setCurrentStep(7)} variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+              <Button onClick={completeInstallation} disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Complete Installation <CheckCircle className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
