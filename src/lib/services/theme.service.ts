@@ -1,69 +1,75 @@
 import { prisma } from "@/lib/prisma";
 
 export type ThemeConfig = {
-  mode: "light" | "dark" | "system";
+  mode: "light" | "dark";
   primaryColor: string;
   secondaryColor: string;
-  accentColor: string;
-  backgroundColor: string;
-  textColor: string;
-  borderRadius: "none" | "sm" | "md" | "lg" | "xl";
   fontFamily: string;
+  borderRadius: string;
 };
 
 export class ThemeService {
-  async getTenantTheme(tenantId: string) {
+  async getTheme(tenantId: string) {
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       select: {
         name: true,
-        logo: true,
-        primaryColor: true,
-        secondaryColor: true,
-        theme: true,
+        settings: true,
       },
     });
 
-    if (!tenant) {
-      throw new Error("Tenant not found");
-    }
+    if (!tenant) throw new Error("Tenant not found");
+
+    const settings = tenant.settings as Record<string, any> || {};
 
     return {
-      logo: tenant.logo,
-      primaryColor: tenant.primaryColor || "#3B82F6",
-      secondaryColor: tenant.secondaryColor || "#10B981",
-      mode: (tenant.theme || "light") as "light" | "dark",
+      name: tenant.name,
+      logo: settings.logo || null,
+      theme: {
+        mode: settings.themeMode || "light",
+        primaryColor: settings.primaryColor || "#000000",
+        secondaryColor: settings.secondaryColor || "#ffffff",
+        fontFamily: settings.fontFamily || "Inter",
+        borderRadius: settings.borderRadius || "0.5rem",
+      },
     };
   }
 
-  async updateTenantTheme(tenantId: string, theme: Partial<ThemeConfig>) {
+  async updateTheme(tenantId: string, data: Partial<ThemeConfig> & { logo?: string }) {
+    const tenant = await prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { settings: true },
+    });
+
+    if (!tenant) throw new Error("Tenant not found");
+
+    const currentSettings = (tenant.settings as Record<string, any>) || {};
+
+    const updatedSettings = {
+      ...currentSettings,
+      ...(data.mode && { themeMode: data.mode }),
+      ...(data.primaryColor && { primaryColor: data.primaryColor }),
+      ...(data.secondaryColor && { secondaryColor: data.secondaryColor }),
+      ...(data.fontFamily && { fontFamily: data.fontFamily }),
+      ...(data.borderRadius && { borderRadius: data.borderRadius }),
+      ...(data.logo && { logo: data.logo }),
+    };
+
     return await prisma.tenant.update({
       where: { id: tenantId },
       data: {
-        primaryColor: theme.primaryColor,
-        secondaryColor: theme.secondaryColor,
-        theme: theme.mode,
+        settings: updatedSettings,
       },
     });
   }
 
-  async uploadLogo(tenantId: string, logoUrl: string) {
-    return await prisma.tenant.update({
-      where: { id: tenantId },
-      data: { logo: logoUrl },
-    });
-  }
-
-  generateCSSVariables(theme: ThemeConfig): string {
+  generateCssVariables(theme: ThemeConfig) {
     return `
       :root {
         --primary: ${theme.primaryColor};
         --secondary: ${theme.secondaryColor};
-        --accent: ${theme.accentColor};
-        --background: ${theme.backgroundColor};
-        --text: ${theme.textColor};
         --radius: ${theme.borderRadius};
-        --font-family: ${theme.fontFamily};
+        --font-sans: ${theme.fontFamily};
       }
     `;
   }
