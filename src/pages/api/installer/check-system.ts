@@ -6,16 +6,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (isInstalled()) {
-    return res.status(403).json({ error: "System already installed" });
-  }
-
   try {
+    // Allow check even if installed (for diagnostics)
     const checks = await checkSystemRequirements();
-    return res.status(200).json({ checks });
-  } catch (error: unknown) {
+    
+    return res.status(200).json({
+      installed: isInstalled(),
+      checks,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
     console.error("System check error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return res.status(500).json({ error: errorMessage });
+    return res.status(500).json({ 
+      error: errorMessage,
+      checks: [{
+        name: "System Check",
+        status: "error",
+        message: "Failed to perform system checks",
+        details: errorMessage
+      }]
+    });
   }
 }

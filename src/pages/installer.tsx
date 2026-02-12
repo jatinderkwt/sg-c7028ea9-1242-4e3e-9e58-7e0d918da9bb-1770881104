@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Check, X, AlertCircle, Loader2, ArrowRight, ArrowLeft, CheckCircle } from "lucide-react";
+import { Check, X, AlertCircle, Loader2, ArrowRight, ArrowLeft, CheckCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
@@ -14,6 +14,7 @@ type SystemCheck = {
   name: string;
   status: "checking" | "success" | "warning" | "error";
   message?: string;
+  details?: string;
 };
 
 type InstallStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -24,14 +25,9 @@ export default function InstallerPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const [systemChecks, setSystemChecks] = useState<SystemCheck[]>([
-    { name: "Node.js Version", status: "checking" },
-    { name: "Database Connection", status: "checking" },
-    { name: "Environment Variables", status: "checking" },
-    { name: "File Permissions", status: "checking" },
-    { name: "Storage Availability", status: "checking" },
-  ]);
-
+  const [systemChecks, setSystemChecks] = useState<SystemCheck[]>([]);
+  const [installed, setInstalled] = useState(false);
+  
   const [dbInitialized, setDbInitialized] = useState(false);
   
   const [adminData, setAdminData] = useState({
@@ -89,28 +85,35 @@ export default function InstallerPage() {
 
   useEffect(() => {
     if (currentStep === 1) {
-      runSystemChecks();
+      checkSystem();
     }
   }, [currentStep]);
 
-  const runSystemChecks = async () => {
+  const checkSystem = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
       const response = await fetch("/api/installer/check-system");
       const data = await response.json();
       
-      const updatedChecks = systemChecks.map(check => {
-        const result = data.checks[check.name.toLowerCase().replace(/\s+/g, "_")];
-        return {
-          ...check,
-          status: result?.status || "error",
-          message: result?.message,
-        };
-      });
+      if (!response.ok) {
+        setError(data.error || "Failed to check system requirements");
+        setSystemChecks([]);
+        return;
+      }
       
-      setSystemChecks(updatedChecks);
+      setSystemChecks(data.checks || []);
+      setInstalled(data.installed || false);
+      
+      const allPassed = data.checks?.every((check: any) => check.status === "success");
+      if (allPassed) {
+        setTimeout(() => setCurrentStep(2), 1500);
+      }
     } catch (err) {
-      setError("Failed to run system checks");
+      const errorMessage = err instanceof Error ? err.message : "Network error checking system";
+      setError(errorMessage);
+      setSystemChecks([]);
     } finally {
       setLoading(false);
     }
@@ -213,6 +216,105 @@ export default function InstallerPage() {
     }
   };
 
+  const renderSystemChecks = () => (
+    <div className="space-y-4">
+      {/* Header removed as it is provided by the Card */}
+
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+        </div>
+      )}
+
+      {!loading && systemChecks.length > 0 && (
+        <div className="space-y-3">
+          {systemChecks.map((check, index) => (
+            <div
+              key={index}
+              className={`p-4 rounded-lg border ${
+                check.status === "success"
+                  ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
+                  : check.status === "warning"
+                  ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
+                  : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+              }`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    {check.status === "success" && (
+                      <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                    )}
+                    {check.status === "warning" && (
+                      <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                    )}
+                    {check.status === "error" && (
+                      <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                    )}
+                    <h3 className="font-semibold">{check.name}</h3>
+                  </div>
+                  <p className={`text-sm ${
+                    check.status === "success" ? "text-emerald-700 dark:text-emerald-300" :
+                    check.status === "warning" ? "text-yellow-700 dark:text-yellow-300" :
+                    "text-red-700 dark:text-red-300"
+                  }`}>
+                    {check.message}
+                  </p>
+                  {check.details && (
+                    <p className="text-xs mt-2 text-muted-foreground font-mono bg-white/50 dark:bg-black/20 p-2 rounded">
+                      {check.details}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && systemChecks.length > 0 && (
+        <div className="flex gap-3 mt-6">
+          <Button
+            onClick={checkSystem}
+            variant="outline"
+            className="flex-1"
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Recheck System
+          </Button>
+          <Button
+            onClick={() => setCurrentStep(2)}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+            disabled={systemChecks.some(c => c.status === "error")}
+          >
+            Continue Setup
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      {systemChecks.some(c => c.status === "error") && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Critical Issues Detected</AlertTitle>
+          <AlertDescription>
+            Please resolve the errors above before proceeding. Check your environment variables and database connection.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {systemChecks.some(c => c.status === "warning") && !systemChecks.some(c => c.status === "error") && (
+        <Alert className="mt-4 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
+          <AlertCircle className="h-4 w-4 text-yellow-600" />
+          <AlertTitle className="text-yellow-800 dark:text-yellow-200">Warnings Detected</AlertTitle>
+          <AlertDescription className="text-yellow-700 dark:text-yellow-300">
+            The system will work, but some features may be limited. Review the warnings above.
+          </AlertDescription>
+        </Alert>
+      )}
+    </div>
+  );
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
@@ -222,32 +324,8 @@ export default function InstallerPage() {
               <CardTitle>Step 1: System Environment Check</CardTitle>
               <CardDescription>Verifying system requirements and configuration</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {systemChecks.map((check, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {getStatusIcon(check.status)}
-                    <div>
-                      <p className="font-medium">{check.name}</p>
-                      {check.message && (
-                        <p className="text-sm text-muted-foreground">{check.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              <div className="flex justify-end gap-3 mt-6">
-                <Button onClick={runSystemChecks} variant="outline" disabled={loading}>
-                  Re-check
-                </Button>
-                <Button 
-                  onClick={() => setCurrentStep(2)} 
-                  disabled={systemChecks.some(c => c.status === "error")}
-                >
-                  Continue <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
+            <CardContent>
+              {renderSystemChecks()}
             </CardContent>
           </Card>
         );
