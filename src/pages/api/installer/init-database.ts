@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
 import { isInstalled } from "@/lib/installer";
-import { exec } from "child_process";
-import { promisify } from "util";
-
-const execPromise = promisify(exec);
+import fs from "fs";
+import path from "path";
 
 // Increase API route timeout
 export const config = {
@@ -42,6 +40,9 @@ export default async function handler(
     );
     
     await Promise.race([connectionPromise, timeoutPromise]);
+    
+    // Test connection with search_path set
+    await prisma.$executeRaw`SET search_path TO public`;
     await prisma.$executeRaw`SELECT 1`;
 
     // Step 2: Check if tables exist
@@ -54,37 +55,51 @@ export default async function handler(
     const hasTables = tables.length > 0;
 
     if (!hasTables) {
-      // Tables don't exist - run Prisma db push to create them
-      console.log("Tables not found. Running Prisma db push...");
+      // Tables don't exist - run migration SQL directly
+      console.log("Tables not found. Running SQL migration...");
       
       try {
-        const { stdout, stderr } = await execPromise("npx prisma db push --skip-generate --accept-data-loss");
-        console.log("Prisma db push output:", stdout);
-        if (stderr) {
-          console.log("Prisma db push stderr:", stderr);
+        // Read the migration SQL file
+        const migrationPath = path.join(process.cwd(), 'prisma', 'migrations', '20260212_init', 'migration.sql');
+        const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+        
+        // Split SQL into individual statements and execute
+        const statements = migrationSQL
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--'));
+        
+        // Set search path first
+        await prisma.$executeRaw`SET search_path TO public`;
+        
+        // Execute each statement
+        for (const statement of statements) {
+          if (statement.trim()) {
+            await prisma.$executeRawUnsafe(statement);
+          }
         }
         
         // Verify tables were created
-        const tablesAfterPush = await prisma.$queryRaw<Array<{ tablename: string }>>`
+        const tablesAfterMigration = await prisma.$queryRaw<Array<{ tablename: string }>>`
           SELECT tablename 
           FROM pg_tables 
           WHERE schemaname = 'public' AND tablename = 'SubscriptionPlan'
         `;
         
-        if (tablesAfterPush.length === 0) {
-          throw new Error("Tables were not created after running db push");
+        if (tablesAfterMigration.length === 0) {
+          throw new Error("Tables were not created after running migration");
         }
         
         console.log("Database schema created successfully");
-      } catch (pushError: any) {
-        console.error("Failed to create database schema:", pushError);
+      } catch (migrationError: any) {
+        console.error("Failed to create database schema:", migrationError);
         return res.status(500).json({
           error: "Failed to create database schema",
-          details: pushError.message || "Could not run Prisma db push",
+          details: migrationError.message || "Could not run SQL migration",
           instructions: [
             "The automatic schema creation failed. Please manually run:",
             "1. Connect to your Dokploy terminal",
-            "2. Run: npx prisma db push",
+            "2. Run: cd /app && npx prisma migrate deploy",
             "3. Come back and try again"
           ]
         });
