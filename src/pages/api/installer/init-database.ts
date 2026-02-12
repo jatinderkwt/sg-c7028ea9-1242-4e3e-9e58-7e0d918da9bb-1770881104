@@ -1,10 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import { PrismaClient } from "@prisma/client";
 import { isInstalled } from "@/lib/installer";
-import { prisma } from "@/lib/prisma";
-import { exec } from "child_process";
-import { promisify } from "util";
 
-const execAsync = promisify(exec);
+// Increase API route timeout
+export const config = {
+  api: {
+    bodyParser: true,
+    responseLimit: false,
+    externalResolver: true,
+  },
+  maxDuration: 300,
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,375 +20,278 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
+  // Check if already installed
+  if (isInstalled()) {
+    return res.status(400).json({ 
+      error: "System already installed",
+      details: "Database has already been initialized. To reinstall, contact support."
+    });
+  }
+
+  const prisma = new PrismaClient();
+
   try {
-    const installed = await isInstalled();
-    if (installed) {
-      return res.status(400).json({ 
-        error: "System already installed",
-        step: "validation"
-      });
-    }
-
-    console.log("🚀 Starting database initialization...");
-
-    // Step 1: Check DATABASE_URL format
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      return res.status(500).json({
-        error: "DATABASE_URL not configured",
-        details: "Please set DATABASE_URL in your environment variables",
-        step: "validation"
-      });
-    }
-
-    // Check if schema parameter is missing
-    if (!databaseUrl.includes('schema=')) {
-      return res.status(400).json({
-        error: "DATABASE_URL missing schema parameter",
-        details: "Your DATABASE_URL must include ?schema=public parameter",
-        fix: `Update DATABASE_URL to: ${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}schema=public`,
-        step: "validation",
-        instructions: [
-          "1. Open your Dokploy Dashboard",
-          "2. Go to Settings → Environment Variables",
-          "3. Find DATABASE_URL",
-          "4. Click Edit",
-          "5. Add ?schema=public to the end (or &schema=public if you already have other parameters)",
-          "6. Save and Redeploy",
-          "7. Try Initialize Database again"
-        ]
-      });
-    }
-
-    // Step 2: Test database connection
-    console.log("🔍 Step 1: Testing database connection...");
-    try {
-      await prisma.$queryRaw`SELECT 1 as test`;
-      console.log("✅ Database connection successful");
-    } catch (dbError: any) {
-      console.error("❌ Database connection failed:", dbError.message);
-      return res.status(500).json({ 
-        error: "Database connection failed",
-        details: dbError.message,
-        step: "connection",
-        fix: "Verify your DATABASE_URL is correct and the database server is accessible"
-      });
-    }
-
-    // Step 3: Generate Prisma Client
-    console.log("📦 Step 2: Generating Prisma Client...");
-    try {
-      const { stdout, stderr } = await execAsync("npx prisma generate", {
-        cwd: process.cwd(),
-        env: { ...process.env }
-      });
-      console.log("✅ Prisma Client generated");
-      if (stderr && !stderr.includes('warn')) {
-        console.log("Prisma generate output:", stderr);
-      }
-    } catch (genError: any) {
-      console.error("❌ Prisma generate failed:", genError.message);
-      return res.status(500).json({ 
-        error: "Failed to generate Prisma Client",
-        details: genError.message,
-        step: "generate"
-      });
-    }
-
-    // Step 4: Try db push first (better for Docker/cloud environments)
-    console.log("🔄 Step 3: Creating database schema with db push...");
-    let schemaCreated = false;
+    // Step 1: Test database connection with a timeout
+    const connectionPromise = prisma.$connect();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error("Database connection timed out")), 5000)
+    );
     
-    try {
-      const { stdout, stderr } = await execAsync(
-        "npx prisma db push --skip-generate --accept-data-loss --force-reset",
-        {
-          cwd: process.cwd(),
-          env: { ...process.env }
-        }
-      );
-      console.log("✅ Database schema created via db push");
-      if (stdout) console.log("DB Push output:", stdout);
-      schemaCreated = true;
-    } catch (pushError: any) {
-      console.log("⚠️ DB push failed, trying migrate deploy...");
-      
-      // Fallback to migrate deploy
-      try {
-        const { stdout: migrateStdout, stderr: migrateStderr } = await execAsync(
-          "npx prisma migrate deploy",
-          {
-            cwd: process.cwd(),
-            env: { ...process.env }
-          }
-        );
-        console.log("✅ Database schema created via migrate deploy");
-        if (migrateStdout) console.log("Migrate output:", migrateStdout);
-        schemaCreated = true;
-      } catch (migrateError: any) {
-        console.error("❌ Both db push and migrate deploy failed");
-        console.error("Push error:", pushError.message);
-        console.error("Migrate error:", migrateError.message);
-        
-        return res.status(500).json({ 
-          error: "Database schema creation failed",
-          details: `DB Push: ${pushError.message}\n\nMigrate Deploy: ${migrateError.message}`,
-          step: "schema",
-          fix: "Ensure DATABASE_URL includes ?schema=public parameter and database user has CREATE TABLE permissions"
-        });
-      }
-    }
+    await Promise.race([connectionPromise, timeoutPromise]);
+    await prisma.$executeRaw`SELECT 1`;
 
-    if (!schemaCreated) {
-      return res.status(500).json({
-        error: "Schema creation verification failed",
-        step: "schema"
+    // Step 2: Check if tables exist
+    // This query checks specifically for the SubscriptionPlan table in the public schema
+    const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
+      SELECT tablename 
+      FROM pg_tables 
+      WHERE schemaname = 'public' AND tablename = 'SubscriptionPlan'
+    `;
+
+    const hasTables = tables.length > 0;
+
+    if (!hasTables) {
+      // Tables don't exist - return 400 with specific instructions
+      // We do NOT try to run migrations here to avoid timeouts/crashes
+      return res.status(400).json({
+        error: "Database schema not initialized",
+        details: "The database tables have not been created yet.",
+        instructions: [
+          "1. Go to your Dokploy Dashboard",
+          "2. Edit the DATABASE_URL environment variable",
+          "3. Append '?schema=public' to the end of the URL",
+          "   Example: postgresql://user:pass@host:port/db?schema=public",
+          "4. Save and Redeploy the application",
+          "5. If tables are still not created, run 'npx prisma db push' in the Dokploy terminal"
+        ],
+        requiresAction: true
       });
     }
 
-    // Step 5: Verify tables exist
-    console.log("🔍 Step 4: Verifying database tables...");
-    try {
-      const tables = await prisma.$queryRaw`
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'public'
-        AND table_type = 'BASE TABLE'
-      ` as Array<{ table_name: string }>;
-      
-      console.log(`✅ Found ${tables.length} tables:`, tables.map(t => t.table_name).join(", "));
-      
-      if (tables.length === 0) {
-        throw new Error("No tables created after schema push/migration");
-      }
-
-      // Check for essential tables
-      const tableNames = tables.map(t => t.table_name.toLowerCase());
-      const requiredTables = ['tenant', 'user', 'role', 'permission', 'subscriptionplan'];
-      const missingTables = requiredTables.filter(t => !tableNames.includes(t));
-      
-      if (missingTables.length > 0) {
-        throw new Error(`Missing required tables: ${missingTables.join(', ')}`);
-      }
-      
-    } catch (verifyError: any) {
-      console.error("❌ Table verification failed:", verifyError.message);
-      return res.status(500).json({ 
-        error: "Database tables verification failed",
-        details: verifyError.message,
-        step: "verification"
-      });
-    }
-
-    // Step 6: Check if data already exists
-    console.log("🔍 Step 5: Checking for existing data...");
+    // Step 3: Check for existing data
     const existingTenant = await prisma.tenant.findFirst();
     
     if (existingTenant) {
-      console.log("⚠️ Data already exists, skipping seeding");
-      return res.status(200).json({ 
-        message: "Database initialized successfully (data already exists)",
-        skipped: true
+      return res.status(400).json({
+        error: "Database already initialized",
+        details: "Default data already exists in the database."
       });
     }
 
-    // Step 7: Create system tenant
-    console.log("🏢 Step 6: Creating system tenant...");
+    // Step 4: Create System Tenant
+    // Schema: name, domain, isActive (default true)
     const systemTenant = await prisma.tenant.create({
       data: {
         name: "System",
         domain: "system.local",
         isActive: true,
-        settings: {}
-      }
+      },
     });
-    console.log("✅ System tenant created:", systemTenant.id);
 
-    // Step 8: Create roles with permissions
-    console.log("👥 Step 7: Creating roles and permissions...");
-    
-    const superAdminRole = await prisma.role.create({
+    // Step 5: Define Permissions
+    const rolePermissions = {
+      superAdmin: [
+        { resource: "tenants", action: "create" },
+        { resource: "tenants", action: "read" },
+        { resource: "tenants", action: "update" },
+        { resource: "tenants", action: "delete" },
+        { resource: "users", action: "create" },
+        { resource: "users", action: "read" },
+        { resource: "users", action: "update" },
+        { resource: "users", action: "delete" },
+        { resource: "roles", action: "create" },
+        { resource: "roles", action: "read" },
+        { resource: "roles", action: "update" },
+        { resource: "roles", action: "delete" },
+        { resource: "contacts", action: "create" },
+        { resource: "contacts", action: "read" },
+        { resource: "contacts", action: "update" },
+        { resource: "contacts", action: "delete" },
+        { resource: "messages", action: "create" },
+        { resource: "messages", action: "read" },
+        { resource: "campaigns", action: "create" },
+        { resource: "campaigns", action: "read" },
+        { resource: "campaigns", action: "update" },
+        { resource: "campaigns", action: "delete" },
+      ],
+      admin: [
+        { resource: "users", action: "create" },
+        { resource: "users", action: "read" },
+        { resource: "users", action: "update" },
+        { resource: "contacts", action: "create" },
+        { resource: "contacts", action: "read" },
+        { resource: "contacts", action: "update" },
+        { resource: "contacts", action: "delete" },
+        { resource: "messages", action: "create" },
+        { resource: "messages", action: "read" },
+        { resource: "campaigns", action: "create" },
+        { resource: "campaigns", action: "read" },
+      ],
+      manager: [
+        { resource: "contacts", action: "read" },
+        { resource: "contacts", action: "update" },
+        { resource: "messages", action: "create" },
+        { resource: "messages", action: "read" },
+        { resource: "campaigns", action: "read" },
+      ],
+      agent: [
+        { resource: "contacts", action: "read" },
+        { resource: "messages", action: "create" },
+        { resource: "messages", action: "read" },
+      ],
+    };
+
+    // Helper to map permissions
+    const createPermissions = (roleType: keyof typeof rolePermissions) => {
+      return {
+        create: rolePermissions[roleType].map(p => ({
+          resource: p.resource,
+          action: p.action,
+          tenantId: systemTenant.id,
+        })),
+      };
+    };
+
+    // Create roles
+    await prisma.role.create({
       data: {
         name: "Super Admin",
-        description: "Full system access including tenant management",
         tenantId: systemTenant.id,
-        permissions: {
-          create: [
-            { tenantId: systemTenant.id, resource: "tenants", action: "create" },
-            { tenantId: systemTenant.id, resource: "tenants", action: "read" },
-            { tenantId: systemTenant.id, resource: "tenants", action: "update" },
-            { tenantId: systemTenant.id, resource: "tenants", action: "delete" },
-            { tenantId: systemTenant.id, resource: "users", action: "create" },
-            { tenantId: systemTenant.id, resource: "users", action: "read" },
-            { tenantId: systemTenant.id, resource: "users", action: "update" },
-            { tenantId: systemTenant.id, resource: "users", action: "delete" },
-            { tenantId: systemTenant.id, resource: "roles", action: "create" },
-            { tenantId: systemTenant.id, resource: "roles", action: "read" },
-            { tenantId: systemTenant.id, resource: "roles", action: "update" },
-            { tenantId: systemTenant.id, resource: "roles", action: "delete" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "create" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "delete" },
-            { tenantId: systemTenant.id, resource: "messages", action: "create" },
-            { tenantId: systemTenant.id, resource: "messages", action: "read" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "create" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "read" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "update" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "delete" }
-          ]
-        }
-      }
+        permissions: createPermissions("superAdmin"),
+      },
     });
 
-    const adminRole = await prisma.role.create({
+    await prisma.role.create({
       data: {
         name: "Admin",
-        description: "Company-level administration",
         tenantId: systemTenant.id,
-        permissions: {
-          create: [
-            { tenantId: systemTenant.id, resource: "users", action: "create" },
-            { tenantId: systemTenant.id, resource: "users", action: "read" },
-            { tenantId: systemTenant.id, resource: "users", action: "update" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "create" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "delete" },
-            { tenantId: systemTenant.id, resource: "messages", action: "create" },
-            { tenantId: systemTenant.id, resource: "messages", action: "read" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "create" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "read" }
-          ]
-        }
-      }
+        permissions: createPermissions("admin"),
+      },
     });
 
-    const managerRole = await prisma.role.create({
+    await prisma.role.create({
       data: {
         name: "Manager",
-        description: "Team management and oversight",
         tenantId: systemTenant.id,
-        permissions: {
-          create: [
-            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
-            { tenantId: systemTenant.id, resource: "contacts", action: "update" },
-            { tenantId: systemTenant.id, resource: "messages", action: "create" },
-            { tenantId: systemTenant.id, resource: "messages", action: "read" },
-            { tenantId: systemTenant.id, resource: "campaigns", action: "read" }
-          ]
-        }
-      }
+        permissions: createPermissions("manager"),
+      },
     });
 
-    const agentRole = await prisma.role.create({
+    await prisma.role.create({
       data: {
         name: "Agent",
-        description: "Handle customer conversations",
         tenantId: systemTenant.id,
-        permissions: {
-          create: [
-            { tenantId: systemTenant.id, resource: "contacts", action: "read" },
-            { tenantId: systemTenant.id, resource: "messages", action: "create" },
-            { tenantId: systemTenant.id, resource: "messages", action: "read" }
-          ]
-        }
-      }
+        permissions: createPermissions("agent"),
+      },
     });
 
-    console.log("✅ Created 4 roles with permissions");
-
-    // Step 9: Create subscription plans
-    console.log("💰 Step 8: Creating subscription plans...");
+    // Step 6: Create Subscription Plans
+    // Schema: name, description, price, billingCycle, features, isActive
     await prisma.subscriptionPlan.createMany({
       data: [
         {
           name: "Free",
-          description: "Perfect for testing and small projects",
+          description: "Basic plan for getting started",
           price: 0,
-          billingCycle: "monthly",
-          features: { 
-            messageLimit: 500,
+          billingCycle: "MONTHLY",
+          features: {
+            messages: 500,
             contacts: 100,
             whatsappAccounts: 1,
-            templates: 5
+            templates: 5,
+            campaigns: false,
+            automation: false,
+            crm: false,
+            analytics: false,
+            support: "Email",
+            historyDays: 30,
           },
-          isActive: true
+          isActive: true,
         },
         {
           name: "Starter",
-          description: "Ideal for growing businesses",
-          price: 4900,
-          billingCycle: "monthly",
-          features: { 
-            messageLimit: 5000,
+          description: "Perfect for small businesses",
+          price: 4900, // Cents
+          billingCycle: "MONTHLY",
+          features: {
+            messages: 5000,
             contacts: 1000,
             whatsappAccounts: 2,
             templates: 20,
-            campaigns: true
+            campaigns: true,
+            automation: false,
+            crm: true,
+            analytics: true,
+            support: "Email + Chat",
+            historyDays: 90,
           },
-          isActive: true
+          isActive: true,
         },
         {
           name: "Professional",
-          description: "Advanced features for professionals",
-          price: 14900,
-          billingCycle: "monthly",
-          features: { 
-            messageLimit: 25000,
+          description: "Advanced features for growing companies",
+          price: 14900, // Cents
+          billingCycle: "MONTHLY",
+          features: {
+            messages: 25000,
             contacts: 10000,
             whatsappAccounts: 5,
-            templates: -1,
+            templates: 100,
             campaigns: true,
             automation: true,
-            crm: true
+            crm: true,
+            analytics: true,
+            support: "Priority",
+            historyDays: 365,
           },
-          isActive: true
+          isActive: true,
         },
         {
           name: "Enterprise",
-          description: "Unlimited everything for large organizations",
-          price: 49900,
-          billingCycle: "monthly",
-          features: { 
-            messageLimit: -1,
+          description: "Unlimited features for large organizations",
+          price: 49900, // Cents
+          billingCycle: "MONTHLY",
+          features: {
+            messages: -1,
             contacts: -1,
             whatsappAccounts: -1,
             templates: -1,
             campaigns: true,
             automation: true,
             crm: true,
-            api: true,
-            whitelabel: true,
-            support: "dedicated"
+            analytics: true,
+            support: "Dedicated",
+            historyDays: -1,
           },
-          isActive: true
-        }
-      ]
+          isActive: true,
+        },
+      ],
     });
-    console.log("✅ Created 4 subscription plans");
 
-    console.log("🎉 Database initialization complete!");
+    await prisma.$disconnect();
 
-    return res.status(200).json({ 
+    return res.status(200).json({
+      success: true,
       message: "Database initialized successfully",
       details: {
-        tenantId: systemTenant.id,
+        tenant: systemTenant.name,
         roles: 4,
-        subscriptionPlans: 4
-      }
+        permissions: 22,
+        plans: 4,
+      },
     });
 
   } catch (error: any) {
-    console.error("💥 Unexpected error during initialization:", error);
-    const errorMessage = error.message || "Unknown error occurred";
-    const errorStack = error.stack || "";
+    await prisma.$disconnect();
     
-    return res.status(500).json({ 
+    console.error("Database initialization error:", error);
+
+    const errorMessage = error.message || "Unknown error occurred";
+    
+    return res.status(500).json({
       error: "Database initialization failed",
       details: errorMessage,
-      step: "unknown",
-      stack: process.env.NODE_ENV === "development" ? errorStack : undefined
+      code: error.code,
     });
   }
 }
