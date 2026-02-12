@@ -1,4 +1,5 @@
 import { decrypt } from "@/lib/encryption";
+import crypto from "crypto";
 
 const META_API_VERSION = process.env.META_API_VERSION || "v21.0";
 const META_GRAPH_API_URL = process.env.META_GRAPH_API_URL || "https://graph.facebook.com";
@@ -158,7 +159,6 @@ export class MetaAPIService {
   }
 
   async validateWebhookSignature(payload: string, signature: string, appSecret: string): Promise<boolean> {
-    const crypto = require("crypto");
     const expectedSignature = crypto
       .createHmac("sha256", appSecret)
       .update(payload)
