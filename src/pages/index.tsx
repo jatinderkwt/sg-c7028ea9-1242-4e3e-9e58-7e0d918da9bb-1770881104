@@ -4,375 +4,301 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Users, Zap, Shield, BarChart3, Bot, Clock, CheckCircle2, ArrowRight, Smartphone, Send, Globe } from "lucide-react";
+import { MessageSquare, Users, Zap, BarChart3, Shield, Sparkles, Database, Rocket, CheckCircle2, ArrowRight, Book, Github } from "lucide-react";
 
 export default function Home() {
   return (
     <>
-      <SEO 
-        title="Enterprise WhatsApp Business API Platform"
-        description="Production-ready WhatsApp Business SaaS platform with full Meta Cloud API compliance, multi-tenant architecture, and advanced automation."
+      <SEO
+        title="Enterprise WhatsApp Business API Platform - Production-Ready SaaS"
+        description="Multi-tenant WhatsApp Business API platform with full Meta Cloud API compliance, CRM, automation, and analytics"
+        image="/og-image.png"
       />
       
-      <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
-        {/* Header */}
-        <header className="border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
-                  <MessageSquare className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-slate-900 dark:text-white">WhatsApp Business API</h1>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Enterprise Platform</p>
-                </div>
-              </div>
-              <nav className="hidden md:flex items-center gap-6">
-                <Link href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
-                  Features
-                </Link>
-                <Link href="#compliance" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
-                  Compliance
-                </Link>
-                <Link href="#api" className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors">
-                  API Docs
-                </Link>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                  Get Started
-                </Button>
-              </nav>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-emerald-900">
+        <header className="border-b bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="w-8 h-8 text-emerald-600" />
+              <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
+                WhatsApp Business API
+              </span>
             </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link href="/docs" className="text-sm font-medium hover:text-emerald-600 transition-colors">
+                Documentation
+              </Link>
+              <Link href="/getting-started" className="text-sm font-medium hover:text-emerald-600 transition-colors">
+                Getting Started
+              </Link>
+              <Link href="/installer">
+                <Button variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                  Install Now
+                </Button>
+              </Link>
+            </nav>
           </div>
         </header>
 
-        {/* Hero Section */}
-        <section className="py-20 sm:py-32">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 dark:bg-green-950 border border-green-200 dark:border-green-800">
-                <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                <span className="text-sm font-medium text-green-700 dark:text-green-300">Meta WhatsApp Cloud API Compliant</span>
-              </div>
-              
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold text-slate-900 dark:text-white leading-tight">
-                Enterprise WhatsApp
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-600">
-                  Business Platform
-                </span>
-              </h1>
-              
-              <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-                Production-ready SaaS platform with multi-tenant architecture, CRM integration, automation engine, and full Meta compliance. Built with Next.js, PostgreSQL, and TypeScript.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 h-12">
-                  View Documentation
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-                <Button size="lg" variant="outline" className="border-slate-300 dark:border-slate-700 h-12 px-8">
-                  Explore API
-                </Button>
-              </div>
+        <section className="container mx-auto px-4 py-20 text-center">
+          <Badge className="mb-4 bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300 border-emerald-200">
+            <CheckCircle2 className="w-3 h-3 mr-1" />
+            Meta WhatsApp Cloud API Certified
+          </Badge>
+          
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 bg-clip-text text-transparent leading-tight">
+            Enterprise WhatsApp
+            <br />
+            Business Platform
+          </h1>
+          
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            Production-ready multi-tenant SaaS with full Meta Cloud API compliance.
+            <br />
+            <span className="font-semibold">20+ API endpoints • Multi-tenant • CRM • Automation • Analytics</span>
+          </p>
 
-              <div className="grid grid-cols-3 gap-8 pt-12 max-w-2xl mx-auto">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white">20+</div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">API Endpoints</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white">15</div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">Database Models</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 dark:text-white">100%</div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mt-1">Meta Compliant</div>
-                </div>
-              </div>
-            </div>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+            <Link href="/getting-started">
+              <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6">
+                <Rocket className="w-5 h-5 mr-2" />
+                Get Started
+              </Button>
+            </Link>
+            <Link href="/docs">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-emerald-600 text-emerald-600 hover:bg-emerald-50">
+                <Book className="w-5 h-5 mr-2" />
+                View Documentation
+              </Button>
+            </Link>
+            <Link href="/installer">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                <Database className="w-5 h-5 mr-2" />
+                Install Platform
+              </Button>
+            </Link>
           </div>
-        </section>
 
-        {/* Features Grid */}
-        <section id="features" className="py-20 bg-slate-50 dark:bg-slate-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <Badge variant="outline" className="mb-4">Core Features</Badge>
-              <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                Everything You Need for Enterprise Messaging
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400">
-                Built with production-grade architecture and enterprise security standards
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-green-100 dark:bg-green-950 rounded-lg flex items-center justify-center mb-4">
-                    <MessageSquare className="w-6 h-6 text-green-600 dark:text-green-400" />
-                  </div>
-                  <CardTitle>Real-Time Chat Inbox</CardTitle>
-                  <CardDescription>
-                    WhatsApp-style UI with typing indicators, message status tracking, and media support
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-950 rounded-lg flex items-center justify-center mb-4">
-                    <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <CardTitle>Multi-Tenant SaaS</CardTitle>
-                  <CardDescription>
-                    Complete data isolation, custom branding, subscription plans, and usage tracking
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-950 rounded-lg flex items-center justify-center mb-4">
-                    <Bot className="w-6 h-6 text-purple-600 dark:text-purple-400" />
-                  </div>
-                  <CardTitle>Automation Engine</CardTitle>
-                  <CardDescription>
-                    Visual workflow builder with trigger-based actions and CRM integration
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-orange-100 dark:bg-orange-950 rounded-lg flex items-center justify-center mb-4">
-                    <Send className="w-6 h-6 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <CardTitle>Campaign Engine</CardTitle>
-                  <CardDescription>
-                    Template-based broadcasting with segmentation, scheduling, and analytics
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-red-100 dark:bg-red-950 rounded-lg flex items-center justify-center mb-4">
-                    <Shield className="w-6 h-6 text-red-600 dark:text-red-400" />
-                  </div>
-                  <CardTitle>Enterprise Security</CardTitle>
-                  <CardDescription>
-                    JWT auth, RBAC, AES-256 encryption, rate limiting, and audit logging
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-950 rounded-lg flex items-center justify-center mb-4">
-                    <BarChart3 className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                  </div>
-                  <CardTitle>Analytics & Reporting</CardTitle>
-                  <CardDescription>
-                    Message metrics, agent performance, campaign analytics, and quality monitoring
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-teal-100 dark:bg-teal-950 rounded-lg flex items-center justify-center mb-4">
-                    <Globe className="w-6 h-6 text-teal-600 dark:text-teal-400" />
-                  </div>
-                  <CardTitle>Integrated CRM</CardTitle>
-                  <CardDescription>
-                    Contact management, leads pipeline, deals tracking, tasks, and appointments
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-pink-100 dark:bg-pink-950 rounded-lg flex items-center justify-center mb-4">
-                    <Clock className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-                  </div>
-                  <CardTitle>24-Hour Window</CardTitle>
-                  <CardDescription>
-                    Automatic enforcement of Meta's 24-hour messaging window with template fallback
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-
-              <Card className="border-slate-200 dark:border-slate-800 hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="w-12 h-12 bg-yellow-100 dark:bg-yellow-950 rounded-lg flex items-center justify-center mb-4">
-                    <Smartphone className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                  <CardTitle>Template Management</CardTitle>
-                  <CardDescription>
-                    Create, submit, and track WhatsApp message templates with Meta approval sync
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
-        </section>
-
-        {/* Compliance Section */}
-        <section id="compliance" className="py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto">
-              <div className="text-center mb-16">
-                <Badge variant="outline" className="mb-4">Meta Compliance</Badge>
-                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                  100% WhatsApp Policy Compliant
-                </h2>
-                <p className="text-lg text-slate-600 dark:text-slate-400">
-                  Built following official Meta WhatsApp Business API guidelines
-                </p>
-              </div>
-
-              <div className="grid sm:grid-cols-2 gap-6">
-                <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                      <CheckCircle2 className="w-5 h-5" />
-                      24-Hour Service Window
-                    </CardTitle>
-                    <CardDescription className="text-green-600 dark:text-green-500">
-                      Automatic enforcement of messaging windows with template fallback outside 24 hours
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-
-                <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                      <CheckCircle2 className="w-5 h-5" />
-                      Template-Based Messaging
-                    </CardTitle>
-                    <CardDescription className="text-green-600 dark:text-green-500">
-                      Support for Marketing, Utility, and Authentication templates with parameter handling
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-
-                <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                      <CheckCircle2 className="w-5 h-5" />
-                      Opt-In Management
-                    </CardTitle>
-                    <CardDescription className="text-green-600 dark:text-green-500">
-                      Track opt-in source, timestamp, and proof with broadcast permission validation
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-
-                <Card className="border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/20">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
-                      <CheckCircle2 className="w-5 h-5" />
-                      Quality Monitoring
-                    </CardTitle>
-                    <CardDescription className="text-green-600 dark:text-green-500">
-                      Message status tracking, delivery rates, and tier-aware rate limiting
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Tech Stack */}
-        <section className="py-20 bg-slate-50 dark:bg-slate-900">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="max-w-4xl mx-auto text-center">
-              <Badge variant="outline" className="mb-4">Technology Stack</Badge>
-              <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                Built with Modern Technologies
-              </h2>
-              <p className="text-lg text-slate-600 dark:text-slate-400 mb-12">
-                Production-ready architecture with enterprise-grade tools
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                {[
-                  { name: "Next.js 15", desc: "Pages Router" },
-                  { name: "TypeScript", desc: "Type Safety" },
-                  { name: "PostgreSQL", desc: "Database" },
-                  { name: "Prisma ORM", desc: "Data Layer" },
-                  { name: "JWT Auth", desc: "Security" },
-                  { name: "Tailwind CSS", desc: "Styling" },
-                  { name: "Meta API", desc: "WhatsApp" },
-                  { name: "Shadcn/UI", desc: "Components" },
-                ].map((tech) => (
-                  <Card key={tech.name} className="border-slate-200 dark:border-slate-800">
-                    <CardContent className="pt-6 text-center">
-                      <div className="font-semibold text-slate-900 dark:text-white mb-1">
-                        {tech.name}
-                      </div>
-                      <div className="text-sm text-slate-500 dark:text-slate-400">
-                        {tech.desc}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <Card className="border-green-200 dark:border-green-800 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
-              <CardContent className="py-16 text-center">
-                <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-                  Ready to Build Your WhatsApp Business Platform?
-                </h2>
-                <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 max-w-2xl mx-auto">
-                  Complete backend infrastructure with 20+ API endpoints, multi-tenant architecture, and full Meta compliance. Start building your frontend now.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                  <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white px-8 h-12">
-                    Read Documentation
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                  <Button size="lg" variant="outline" className="border-slate-300 dark:border-slate-700 h-12 px-8">
-                    View on GitHub
-                  </Button>
-                </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            <Card className="border-emerald-100 dark:border-emerald-900">
+              <CardContent className="pt-6 text-center">
+                <div className="text-3xl font-bold text-emerald-600">40+</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">API Endpoints</div>
+              </CardContent>
+            </Card>
+            <Card className="border-emerald-100 dark:border-emerald-900">
+              <CardContent className="pt-6 text-center">
+                <div className="text-3xl font-bold text-emerald-600">9</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Step Installer</div>
+              </CardContent>
+            </Card>
+            <Card className="border-emerald-100 dark:border-emerald-900">
+              <CardContent className="pt-6 text-center">
+                <div className="text-3xl font-bold text-emerald-600">15</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Database Models</div>
+              </CardContent>
+            </Card>
+            <Card className="border-emerald-100 dark:border-emerald-900">
+              <CardContent className="pt-6 text-center">
+                <div className="text-3xl font-bold text-emerald-600">100%</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Type Safe</div>
               </CardContent>
             </Card>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800 py-12">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  © 2026 WhatsApp Business API Platform
+        <section className="container mx-auto px-4 py-16">
+          <h2 className="text-4xl font-bold text-center mb-12">Core Features</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <MessageSquare className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>Real-Time Messaging</CardTitle>
+                <CardDescription>
+                  Full WhatsApp Cloud API integration with webhook processing, message status tracking, and media support
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Users className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>Multi-Tenant SaaS</CardTitle>
+                <CardDescription>
+                  Complete tenant isolation with per-tenant settings, branding, subscriptions, and usage tracking
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Zap className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>Automation Engine</CardTitle>
+                <CardDescription>
+                  Workflow automation with triggers, conditions, and actions for intelligent message routing
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <BarChart3 className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>Analytics Dashboard</CardTitle>
+                <CardDescription>
+                  Comprehensive reporting with message metrics, agent performance, and campaign analytics
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Shield className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>Enterprise Security</CardTitle>
+                <CardDescription>
+                  JWT authentication, AES-256 encryption, RBAC, audit logs, and Meta webhook validation
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card className="border-emerald-100 dark:border-emerald-900 hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <Sparkles className="w-12 h-12 text-emerald-600 mb-4" />
+                <CardTitle>CRM & Campaigns</CardTitle>
+                <CardDescription>
+                  Full CRM with contacts, deals, tasks, and template-based broadcast campaigns
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-3xl text-white my-16">
+          <div className="text-center max-w-3xl mx-auto">
+            <h2 className="text-4xl font-bold mb-6">Meta WhatsApp Compliance</h2>
+            <p className="text-xl mb-8 text-emerald-50">
+              Fully compliant with Meta WhatsApp Business API policies
+            </p>
+            <div className="grid md:grid-cols-2 gap-6 text-left">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold mb-2">24-Hour Window Enforcement</h3>
+                  <p className="text-emerald-50">Automatic blocking of free-form messages outside customer service window</p>
                 </div>
               </div>
-              <div className="flex items-center gap-6 text-sm text-slate-600 dark:text-slate-400">
-                <Link href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-                  Documentation
-                </Link>
-                <Link href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-                  API Reference
-                </Link>
-                <Link href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-                  Support
-                </Link>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold mb-2">Template Management</h3>
+                  <p className="text-emerald-50">Create, submit, and track approval status for Marketing, Utility, and Authentication templates</p>
+                </div>
               </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold mb-2">Opt-In Compliance</h3>
+                  <p className="text-emerald-50">Track opt-in source, timestamp, and proof for GDPR compliance</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-6 h-6 flex-shrink-0 mt-1" />
+                <div>
+                  <h3 className="font-bold mb-2">Quality Monitoring</h3>
+                  <p className="text-emerald-50">Message delivery tracking, failure logging, and rate limiting</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-16">
+          <h2 className="text-4xl font-bold text-center mb-12">Technology Stack</h2>
+          <div className="grid md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { name: "Next.js 15", desc: "React Framework" },
+              { name: "TypeScript", desc: "Type Safety" },
+              { name: "PostgreSQL", desc: "Database" },
+              { name: "Prisma ORM", desc: "Database Toolkit" },
+              { name: "Tailwind CSS", desc: "Styling" },
+              { name: "Shadcn/UI", desc: "Components" },
+              { name: "JWT", desc: "Authentication" },
+              { name: "AES-256", desc: "Encryption" }
+            ].map((tech) => (
+              <Card key={tech.name} className="text-center border-emerald-100 dark:border-emerald-900">
+                <CardHeader>
+                  <CardTitle className="text-lg">{tech.name}</CardTitle>
+                  <CardDescription>{tech.desc}</CardDescription>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="container mx-auto px-4 py-16 text-center">
+          <h2 className="text-4xl font-bold mb-6">Ready to Get Started?</h2>
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+            Install the platform in minutes with our guided 9-step installer wizard
+          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/getting-started">
+              <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6">
+                View Installation Guide
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </Link>
+            <Link href="/docs">
+              <Button size="lg" variant="outline" className="text-lg px-8 py-6 border-emerald-600 text-emerald-600 hover:bg-emerald-50">
+                <Book className="w-5 h-5 mr-2" />
+                Read Documentation
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        <footer className="border-t bg-gray-50 dark:bg-gray-900 mt-20">
+          <div className="container mx-auto px-4 py-12">
+            <div className="grid md:grid-cols-4 gap-8">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-6 h-6 text-emerald-600" />
+                  <span className="font-bold">WhatsApp Business API</span>
+                </div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Enterprise-grade WhatsApp Business platform with full Meta compliance
+                </p>
+              </div>
+              
+              <div>
+                <h3 className="font-bold mb-4">Platform</h3>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <li><Link href="/getting-started" className="hover:text-emerald-600">Getting Started</Link></li>
+                  <li><Link href="/docs" className="hover:text-emerald-600">Documentation</Link></li>
+                  <li><Link href="/installer" className="hover:text-emerald-600">Installation</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-bold mb-4">Resources</h3>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <li><Link href="/docs#api-reference" className="hover:text-emerald-600">API Reference</Link></li>
+                  <li><Link href="/docs#compliance" className="hover:text-emerald-600">Compliance Guide</Link></li>
+                  <li><Link href="/docs#deployment" className="hover:text-emerald-600">Deployment</Link></li>
+                </ul>
+              </div>
+              
+              <div>
+                <h3 className="font-bold mb-4">Connect</h3>
+                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                  <li><a href="https://github.com" className="hover:text-emerald-600 flex items-center gap-2">
+                    <Github className="w-4 h-4" />
+                    GitHub
+                  </a></li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="border-t mt-8 pt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+              <p>© 2026 WhatsApp Business API Platform. Built with Next.js, TypeScript & PostgreSQL.</p>
             </div>
           </div>
         </footer>
