@@ -1,37 +1,49 @@
 import { prisma } from "@/lib/prisma";
 
 export class ContactService {
-  async createContact(params: {
-    tenantId: string;
-    phoneNumber: string;
-    name?: string;
-    email?: string;
-    tags?: string[];
-    customFields?: any;
-    optInStatus?: string;
-    optInSource?: string;
-    optInProof?: string;
-  }) {
-    return prisma.contact.create({
+  async createContact(tenantId: string, data: any) {
+    return await prisma.contact.create({
       data: {
-        tenantId: params.tenantId,
-        phoneNumber: params.phoneNumber,
-        name: params.name,
-        email: params.email,
-        tags: params.tags || [],
-        customFields: params.customFields || {},
-        optInStatus: params.optInStatus || "pending",
-        optInSource: params.optInSource,
-        optInProof: params.optInProof,
-        optInTimestamp: params.optInStatus === "opted_in" ? new Date() : undefined,
+        tenantId,
+        phoneNumber: data.phoneNumber,
+        name: data.name,
+        email: data.email,
+        tags: data.tags || [],
+        customFields: data.customFields || {},
+        optInStatus: data.optInStatus || "none",
+        optInSource: data.optInSource,
+        optInProof: data.optInProof,
       },
     });
   }
 
-  async updateContact(contactId: string, data: any) {
-    return prisma.contact.update({
-      where: { id: contactId },
-      data,
+  async getContact(tenantId: string, contactId: string) {
+    return await prisma.contact.findFirst({
+      where: {
+        id: contactId,
+        tenantId,
+      },
+      include: {
+        conversations: true,
+        deals: true,
+      },
+    });
+  }
+
+  async updateContact(tenantId: string, contactId: string, data: any) {
+    return await prisma.contact.update({
+      where: {
+        id: contactId,
+      },
+      data: {
+        name: data.name,
+        email: data.email,
+        tags: data.tags,
+        customFields: data.customFields,
+        optInStatus: data.optInStatus,
+        optInSource: data.optInSource,
+        optInProof: data.optInProof,
+      },
     });
   }
 
@@ -85,10 +97,6 @@ export class ContactService {
         deals: {
           orderBy: { createdAt: "desc" },
         },
-        tasks: {
-          where: { status: "pending" },
-          orderBy: { dueDate: "asc" },
-        },
       },
     });
   }
@@ -135,7 +143,6 @@ export class ContactService {
         optInStatus: params.status,
         optInSource: params.source,
         optInProof: params.proof,
-        optInTimestamp: params.status === "opted_in" ? new Date() : undefined,
       },
     });
   }

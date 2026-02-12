@@ -1,26 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAuth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { metaAPI } from "@/lib/services/meta-api.service";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
 
     if (req.method === "GET") {
-      const { whatsappAccountId, status } = req.query;
-
-      const where: any = {
-        tenantId: session.tenantId,
-      };
-
-      if (whatsappAccountId) {
-        where.whatsappAccountId = whatsappAccountId;
-      }
-
-      if (status) {
-        where.status = status;
-      }
+      const { status } = req.query;
+      
+      const where: any = { tenantId: session.tenantId };
+      if (status) where.status = status;
 
       const templates = await prisma.template.findMany({
         where,
@@ -31,27 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "POST") {
-      const { whatsappAccountId, name, category, language, components } = req.body;
-
-      if (!whatsappAccountId || !name || !category || !components) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      const whatsappAccount = await prisma.whatsAppAccount.findUnique({
-        where: { id: whatsappAccountId },
-      });
-
-      if (!whatsappAccount || whatsappAccount.tenantId !== session.tenantId) {
-        return res.status(404).json({ error: "WhatsApp account not found" });
-      }
+      const { name, category, language, components } = req.body;
 
       const template = await prisma.template.create({
         data: {
           tenantId: session.tenantId,
-          whatsappAccountId,
           name,
           category,
-          language: language || "en",
+          language,
           components,
           status: "pending",
         },
@@ -62,7 +39,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error: any) {
-    console.error("Templates API error:", error);
     return res.status(error.message === "Unauthorized" ? 401 : 500).json({ error: error.message });
   }
 }

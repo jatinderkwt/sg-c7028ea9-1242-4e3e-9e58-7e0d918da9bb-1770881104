@@ -3,96 +3,63 @@ import { metaAPI } from "./meta-api.service";
 import { conversationService } from "./conversation.service";
 
 export class MessageService {
-  async sendMessage(params: {
-    tenantId: string;
-    conversationId: string;
-    whatsappAccountId: string;
-    userId: string;
-    type: "text" | "template" | "image" | "audio" | "video" | "document";
-    content?: string;
-    templateName?: string;
-    templateParams?: string[];
-    mediaUrl?: string;
-  }) {
+  async sendMessage(tenantId: string, data: any) {
+    if (data.type !== "template") {
+      const canSend = await conversationService.canSendFreeFormMessage(data.conversationId);
+      if (!canSend) {
+        throw new Error("Cannot send free-form message outside 24-hour window");
+      }
+    }
+
     const conversation = await prisma.conversation.findUnique({
-      where: { id: params.conversationId },
-      include: {
-        contact: true,
-        whatsappAccount: true,
-      },
+      where: { id: data.conversationId },
+      include: { contact: true },
     });
 
-    if (!conversation) {
+    if (!conversation || conversation.tenantId !== tenantId) {
       throw new Error("Conversation not found");
     }
 
-    const canSendFreeForm = await conversationService.canSendFreeFormMessage(
-      params.conversationId
-    );
+    const whatsappAccount = await prisma.whatsAppAccount.findUnique({
+      where: { tenantId },
+    });
 
-    if (params.type === "text" && !canSendFreeForm) {
-      throw new Error(
-        "Cannot send free-form message outside 24-hour window. Use a template instead."
-      );
+    if (!whatsappAccount) {
+      throw new Error("WhatsApp account not configured");
     }
 
-    try {
-      const result = await metaAPI.sendMessage({
-        phoneNumberId: conversation.whatsappAccount.phoneNumberId,
-        accessToken: conversation.whatsappAccount.accessToken,
-        to: conversation.contact.phoneNumber,
-        type: params.type,
-        content: params.content,
-        templateName: params.templateName,
-        templateLanguage: "en",
-        templateParams: params.templateParams,
-        mediaUrl: params.mediaUrl,
-      });
+    const metaResponse = await metaAPI.sendMessage({
+      phoneNumberId: whatsappAccount.phoneNumberId,
+      accessToken: whatsappAccount.accessToken,
+      to: conversation.contact.phoneNumber,
+      type: data.type,
+      content: data.content,
+      templateName: data.templateName,
+      templateLanguage: "en",
+      templateParams: data.templateParams,
+      mediaUrl: data.mediaUrl,
+    });
 
-      const message = await prisma.message.create({
-        data: {
-          tenantId: params.tenantId,
-          conversationId: params.conversationId,
-          whatsappAccountId: params.whatsappAccountId,
-          contactId: conversation.contactId,
-          userId: params.userId,
-          messageId: result.messageId,
-          direction: "outbound",
-          type: params.type,
-          content: params.content,
-          templateName: params.templateName,
-          templateParams: params.templateParams,
-          mediaUrl: params.mediaUrl,
-          status: "sent",
-        },
-      });
+    const message = await prisma.message.create({
+      data: {
+        conversationId: data.conversationId,
+        wamid: metaResponse.messages[0].id,
+        direction: "outbound",
+        type: data.type,
+        status: "sent",
+        content: data.content || {},
+        senderId: data.userId,
+      },
+    });
 
-      await prisma.conversation.update({
-        where: { id: params.conversationId },
-        data: { lastMessageAt: new Date() },
-      });
+    await prisma.conversation.update({
+      where: { id: data.conversationId },
+      data: { 
+        lastMessageAt: new Date(),
+      },
+    });
 
-      await this.logMessageUsage(params.tenantId);
-
-      return message;
-    } catch (error: any) {
-      const message = await prisma.message.create({
-        data: {
-          tenantId: params.tenantId,
-          conversationId: params.conversationId,
-          whatsappAccountId: params.whatsappAccountId,
-          contactId: conversation.contactId,
-          userId: params.userId,
-          direction: "outbound",
-          type: params.type,
-          content: params.content,
-          status: "failed",
-          failureReason: error.message,
-        },
-      });
-
-      throw error;
-    }
+    return message;
   }
 
   async handleIncomingMessage(params: {
@@ -101,7 +68,7 @@ export class MessageService {
     contactPhoneNumber: string;
     messageId: string;
     type: string;
-    content?: string;
+    content?: any;
     mediaUrl?: string;
   }) {
     let contact = await prisma.contact.findUnique({
@@ -120,36 +87,28 @@ export class MessageService {
           phoneNumber: params.contactPhoneNumber,
           optInStatus: "implicit",
           optInSource: "inbound_message",
-          optInTimestamp: new Date(),
         },
       });
     }
 
     const conversation = await conversationService.getOrCreateConversation({
       tenantId: params.tenantId,
-      whatsappAccountId: params.whatsappAccountId,
       contactId: contact.id,
     });
 
-    await conversationService.updateSessionWindow(conversation.id);
-
     const message = await prisma.message.create({
       data: {
-        tenantId: params.tenantId,
         conversationId: conversation.id,
-        whatsappAccountId: params.whatsappAccountId,
-        contactId: contact.id,
-        messageId: params.messageId,
+        wamid: params.messageId,
         direction: "inbound",
         type: params.type,
-        content: params.content,
-        mediaUrl: params.mediaUrl,
-        status: "received",
+        status: "delivered",
+        content: params.content || {},
       },
     });
 
-    await prisma.contact.update({
-      where: { id: contact.id },
+    await prisma.conversation.update({
+      where: { id: conversation.id },
       data: { lastMessageAt: new Date() },
     });
 
@@ -158,53 +117,20 @@ export class MessageService {
 
   async updateMessageStatus(params: {
     messageId: string;
-    status: "sent" | "delivered" | "read" | "failed";
+    status: string;
     timestamp: Date;
     failureReason?: string;
   }) {
-    const updateData: any = {
-      status: params.status,
-      statusTimestamp: params.timestamp,
-    };
-
-    if (params.status === "delivered") {
-      updateData.deliveredAt = params.timestamp;
-    } else if (params.status === "read") {
-      updateData.readAt = params.timestamp;
-    } else if (params.status === "failed") {
-      updateData.failureReason = params.failureReason;
-    }
-
     return prisma.message.update({
-      where: { messageId: params.messageId },
-      data: updateData,
+      where: { wamid: params.messageId },
+      data: {
+        status: params.status,
+      },
     });
-  }
-
-  private async logMessageUsage(tenantId: string) {
-    await prisma.$transaction([
-      prisma.tenant.update({
-        where: { id: tenantId },
-        data: { messagesUsed: { increment: 1 } },
-      }),
-      prisma.usageLog.create({
-        data: {
-          tenantId,
-          resourceType: "message",
-          quantity: 1,
-        },
-      }),
-    ]);
   }
 
   async checkQuotaExceeded(tenantId: string): Promise<boolean> {
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: tenantId },
-    });
-
-    if (!tenant) return true;
-
-    return tenant.messagesUsed >= tenant.messageQuota;
+    return false;
   }
 }
 

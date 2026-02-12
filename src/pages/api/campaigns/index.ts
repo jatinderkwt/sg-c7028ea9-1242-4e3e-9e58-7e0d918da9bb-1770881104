@@ -4,14 +4,15 @@ import { prisma } from "@/lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await requireRole(["admin", "manager"]);
+    const session = await requireAuth(req);
 
     if (req.method === "GET") {
+      await requireRole(["admin", "manager"], session);
+      
       const campaigns = await prisma.campaign.findMany({
         where: { tenantId: session.tenantId },
         include: {
           template: true,
-          whatsappAccount: true,
         },
         orderBy: { createdAt: "desc" },
       });
@@ -20,30 +21,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "POST") {
-      const { whatsappAccountId, templateId, name, segmentTags, segmentCustomFields, scheduledAt } =
-        req.body;
-
-      if (!whatsappAccountId || !templateId || !name) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
-
-      const template = await prisma.template.findUnique({
-        where: { id: templateId },
-      });
-
-      if (!template || template.tenantId !== session.tenantId || template.status !== "approved") {
-        return res.status(400).json({ error: "Invalid or unapproved template" });
-      }
+      await requireRole(["admin", "manager"], session);
+      
+      const { templateId, name, scheduledAt, segmentConfig } = req.body;
 
       const campaign = await prisma.campaign.create({
         data: {
           tenantId: session.tenantId,
-          whatsappAccountId,
           templateId,
           name,
-          segmentTags: segmentTags || [],
-          segmentCustomFields: segmentCustomFields || {},
-          scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+          scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
+          segmentConfig,
+          status: scheduledAt ? "scheduled" : "draft",
         },
       });
 
@@ -52,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error: any) {
-    console.error("Campaigns API error:", error);
     return res.status(error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500).json({ error: error.message });
   }
 }

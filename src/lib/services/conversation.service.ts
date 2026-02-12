@@ -1,94 +1,121 @@
 import { prisma } from "@/lib/prisma";
-import { metaAPI } from "./meta-api.service";
 
 export class ConversationService {
-  async getOrCreateConversation(params: {
-    tenantId: string;
-    whatsappAccountId: string;
-    contactId: string;
-  }) {
-    let conversation = await prisma.conversation.findFirst({
-      where: {
-        tenantId: params.tenantId,
-        whatsappAccountId: params.whatsappAccountId,
-        contactId: params.contactId,
-        status: { in: ["open", "pending"] },
+  async getConversations(tenantId: string, params: any) {
+    const { status, assignedUserId, limit = 50, offset = 0 } = params;
+    
+    const where: any = {
+      tenantId,
+      status,
+    };
+    
+    if (assignedUserId) {
+      where.assignedToId = assignedUserId;
+    }
+    
+    return await prisma.conversation.findMany({
+      where,
+      include: {
+        contact: true,
+        assignedTo: true,
+        messages: {
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
+      },
+      orderBy: { lastMessageAt: "desc" },
+      take: Number(limit),
+      skip: Number(offset),
+    });
+  }
+
+  async createConversation(tenantId: string, data: any) {
+    return await prisma.conversation.create({
+      data: {
+        tenantId,
+        contactId: data.contactId,
+        status: "open",
+        channel: "whatsapp",
+        assignedToId: data.assignedToId,
       },
       include: {
         contact: true,
-        whatsappAccount: true,
+        assignedTo: true,
+      },
+    });
+  }
+
+  async getOrCreateConversation(params: {
+    tenantId: string;
+    contactId: string;
+  }) {
+    const existing = await prisma.conversation.findFirst({
+      where: {
+        tenantId: params.tenantId,
+        contactId: params.contactId,
+        status: "open",
       },
     });
 
-    if (!conversation) {
-      conversation = await prisma.conversation.create({
-        data: {
-          tenantId: params.tenantId,
-          whatsappAccountId: params.whatsappAccountId,
-          contactId: params.contactId,
-          status: "open",
-        },
-        include: {
-          contact: true,
-          whatsappAccount: true,
-        },
-      });
-    }
+    if (existing) return existing;
 
-    return conversation;
+    return await prisma.conversation.create({
+      data: {
+        tenantId: params.tenantId,
+        contactId: params.contactId,
+        status: "open",
+        channel: "whatsapp",
+      },
+    });
   }
 
   async canSendFreeFormMessage(conversationId: string): Promise<boolean> {
     const conversation = await prisma.conversation.findUnique({
       where: { id: conversationId },
-    });
-
-    if (!conversation || !conversation.lastInboundAt) {
-      return false;
-    }
-
-    return metaAPI.isWithin24HourWindow(conversation.lastInboundAt);
-  }
-
-  async updateSessionWindow(conversationId: string) {
-    const now = new Date();
-    const expiry = metaAPI.calculateSessionExpiry(now);
-
-    await prisma.conversation.update({
-      where: { id: conversationId },
-      data: {
-        lastInboundAt: now,
-        sessionWindowExpiry: expiry,
+      include: {
+        messages: {
+          where: { direction: "inbound" },
+          orderBy: { createdAt: "desc" },
+          take: 1,
+        },
       },
     });
+
+    if (!conversation) return false;
+
+    const lastInbound = conversation.messages[0];
+    if (!lastInbound) return false;
+
+    const lastInboundAt = lastInbound.createdAt;
+    const now = new Date();
+    const diff = now.getTime() - lastInboundAt.getTime();
+    const hours = diff / (1000 * 60 * 60);
+
+    return hours < 24;
   }
 
-  async assignAgent(conversationId: string, userId: string) {
-    return prisma.conversation.update({
+  async updateStatus(conversationId: string, status: string) {
+    return await prisma.conversation.update({
       where: { id: conversationId },
-      data: { assignedUserId: userId },
+      data: { status },
     });
   }
-
-  async closeConversation(conversationId: string) {
-    return prisma.conversation.update({
+  
+  async assignAgent(conversationId: string, userId: string) {
+    return await prisma.conversation.update({
       where: { id: conversationId },
-      data: { status: "closed" },
+      data: { assignedToId: userId },
     });
   }
 
   async getConversationMessages(conversationId: string, limit: number = 50) {
-    return prisma.message.findMany({
+    return await prisma.message.findMany({
       where: { conversationId },
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: "asc" },
       take: limit,
       include: {
-        user: {
-          select: {
-            id: true,
-            name: true,
-            avatar: true,
-          },
+        sender: {
+          select: { id: true, name: true, image: true },
         },
       },
     });
