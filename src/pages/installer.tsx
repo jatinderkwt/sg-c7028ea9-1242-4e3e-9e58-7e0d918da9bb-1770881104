@@ -104,11 +104,20 @@ export default function InstallerPage() {
         return;
       }
       
-      setSystemChecks(data.checks || []);
+      // Ensure checks is always an array with valid structure
+      const checks = Array.isArray(data.checks) ? data.checks : [];
+      const validChecks = checks.map(check => ({
+        name: check?.name || "Unknown Check",
+        status: check?.status || "error",
+        message: check?.message || "No message provided",
+        details: check?.details || undefined
+      }));
+      
+      setSystemChecks(validChecks);
       setInstalled(data.installed || false);
       
-      const allPassed = data.checks?.every((check: any) => check.status === "success");
-      if (allPassed) {
+      const allPassed = validChecks.every((check) => check.status === "success");
+      if (allPassed && validChecks.length > 0) {
         setTimeout(() => setCurrentStep(2), 1500);
       }
     } catch (err) {
@@ -259,7 +268,7 @@ export default function InstallerPage() {
 
       {!loading && !error && systemChecks.length > 0 && (
         <>
-          {systemChecks.some(check => check.status === "error") && (
+          {systemChecks.some(check => check?.status === "error") && (
             <Alert variant="destructive" className="mb-4">
               <AlertDescription className="space-y-2">
                 <p className="font-semibold">⚠️ Some checks failed</p>
@@ -280,47 +289,57 @@ export default function InstallerPage() {
           )}
 
           <div className="space-y-3">
-            {systemChecks.map((check, index) => (
-              <div
-                key={index}
-                className={`p-4 rounded-lg border ${
-                  check.status === "success"
-                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
-                    : check.status === "warning"
-                    ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
-                    : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      {check.status === "success" && (
-                        <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                      )}
-                      {check.status === "warning" && (
-                        <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                      )}
-                      {check.status === "error" && (
-                        <X className="h-5 w-5 text-red-600 dark:text-red-400" />
-                      )}
-                      <h3 className="font-semibold">{check.name}</h3>
-                    </div>
-                    <p className={`text-sm ${
-                      check.status === "success" ? "text-emerald-700 dark:text-emerald-300" :
-                      check.status === "warning" ? "text-yellow-700 dark:text-yellow-300" :
-                      "text-red-700 dark:text-red-300"
-                    }`}>
-                      {check.message}
-                    </p>
-                    {check.details && (
-                      <p className="text-xs mt-2 text-muted-foreground font-mono bg-white/50 dark:bg-black/20 p-2 rounded">
-                        {check.details}
+            {systemChecks.map((check, index) => {
+              // Safety check - ensure check object exists
+              if (!check || typeof check !== 'object') return null;
+              
+              const checkName = check.name || "Unknown Check";
+              const checkStatus = check.status || "error";
+              const checkMessage = check.message || "No message provided";
+              const checkDetails = check.details;
+              
+              return (
+                <div
+                  key={index}
+                  className={`p-4 rounded-lg border ${
+                    checkStatus === "success"
+                      ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
+                      : checkStatus === "warning"
+                      ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
+                      : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+                  }`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        {checkStatus === "success" && (
+                          <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                        {checkStatus === "warning" && (
+                          <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                        )}
+                        {checkStatus === "error" && (
+                          <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                        )}
+                        <h3 className="font-semibold">{checkName}</h3>
+                      </div>
+                      <p className={`text-sm ${
+                        checkStatus === "success" ? "text-emerald-700 dark:text-emerald-300" :
+                        checkStatus === "warning" ? "text-yellow-700 dark:text-yellow-300" :
+                        "text-red-700 dark:text-red-300"
+                      }`}>
+                        {checkMessage}
                       </p>
-                    )}
+                      {checkDetails && (
+                        <p className="text-xs mt-2 text-muted-foreground font-mono bg-white/50 dark:bg-black/20 p-2 rounded">
+                          {checkDetails}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
@@ -346,7 +365,7 @@ export default function InstallerPage() {
         </div>
       )}
 
-      {systemChecks.some(c => c.status === "error") && (
+      {systemChecks.some(c => c?.status === "error") && (
         <Alert variant="destructive" className="mt-4">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Critical Issues Detected</AlertTitle>
@@ -356,7 +375,7 @@ export default function InstallerPage() {
         </Alert>
       )}
 
-      {systemChecks.some(c => c.status === "warning") && !systemChecks.some(c => c.status === "error") && (
+      {systemChecks.some(c => c?.status === "warning") && !systemChecks.some(c => c?.status === "error") && (
         <Alert className="mt-4 border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertTitle className="text-yellow-800 dark:text-yellow-200">Warnings Detected</AlertTitle>
@@ -824,7 +843,7 @@ export default function InstallerPage() {
                     id="webhookUrl"
                     value={whatsappConfig.webhookUrl}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, webhookUrl: e.target.value })}
-                    placeholder="https://yourdomain.com/api/webhook/whatsapp"
+                    placeholder="https://yourdomain.com/api/auth/login"
                   />
                 </div>
                 
