@@ -123,20 +123,24 @@ export default function InstallerPage() {
   const initializeDatabase = async () => {
     setLoading(true);
     setError(null);
+    
     try {
       const response = await fetch("/api/installer/init-database", {
         method: "POST",
+        headers: { "Content-Type": "application/json" }
       });
-      
+
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to initialize database");
+        throw new Error(data.details || data.error || "Database initialization failed");
       }
-      
+
       setDbInitialized(true);
-      setCurrentStep(3);
+      setError(null);
     } catch (err: any) {
-      setError(err.message);
+      console.error("Database initialization error:", err);
+      setError(err.message || "Failed to initialize database");
     } finally {
       setLoading(false);
     }
