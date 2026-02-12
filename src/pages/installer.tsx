@@ -20,6 +20,82 @@ type SystemCheck = {
 
 type InstallStep = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+const TIMEZONES = [
+  // Americas
+  { value: "America/New_York", label: "America/New York (EST/EDT)" },
+  { value: "America/Chicago", label: "America/Chicago (CST/CDT)" },
+  { value: "America/Denver", label: "America/Denver (MST/MDT)" },
+  { value: "America/Los_Angeles", label: "America/Los Angeles (PST/PDT)" },
+  { value: "America/Anchorage", label: "America/Anchorage (AKST/AKDT)" },
+  { value: "America/Phoenix", label: "America/Phoenix (MST)" },
+  { value: "America/Toronto", label: "America/Toronto (EST/EDT)" },
+  { value: "America/Vancouver", label: "America/Vancouver (PST/PDT)" },
+  { value: "America/Mexico_City", label: "America/Mexico City (CST/CDT)" },
+  { value: "America/Bogota", label: "America/Bogota (COT)" },
+  { value: "America/Lima", label: "America/Lima (PET)" },
+  { value: "America/Santiago", label: "America/Santiago (CLT/CLST)" },
+  { value: "America/Sao_Paulo", label: "America/Sao Paulo (BRT/BRST)" },
+  { value: "America/Argentina/Buenos_Aires", label: "America/Buenos Aires (ART)" },
+  { value: "America/Caracas", label: "America/Caracas (VET)" },
+  
+  // Europe
+  { value: "Europe/London", label: "Europe/London (GMT/BST)" },
+  { value: "Europe/Paris", label: "Europe/Paris (CET/CEST)" },
+  { value: "Europe/Berlin", label: "Europe/Berlin (CET/CEST)" },
+  { value: "Europe/Rome", label: "Europe/Rome (CET/CEST)" },
+  { value: "Europe/Madrid", label: "Europe/Madrid (CET/CEST)" },
+  { value: "Europe/Amsterdam", label: "Europe/Amsterdam (CET/CEST)" },
+  { value: "Europe/Brussels", label: "Europe/Brussels (CET/CEST)" },
+  { value: "Europe/Vienna", label: "Europe/Vienna (CET/CEST)" },
+  { value: "Europe/Warsaw", label: "Europe/Warsaw (CET/CEST)" },
+  { value: "Europe/Stockholm", label: "Europe/Stockholm (CET/CEST)" },
+  { value: "Europe/Athens", label: "Europe/Athens (EET/EEST)" },
+  { value: "Europe/Istanbul", label: "Europe/Istanbul (TRT)" },
+  { value: "Europe/Moscow", label: "Europe/Moscow (MSK)" },
+  { value: "Europe/Dublin", label: "Europe/Dublin (GMT/IST)" },
+  { value: "Europe/Lisbon", label: "Europe/Lisbon (WET/WEST)" },
+  
+  // Asia
+  { value: "Asia/Dubai", label: "Asia/Dubai (GST)" },
+  { value: "Asia/Karachi", label: "Asia/Karachi (PKT)" },
+  { value: "Asia/Kolkata", label: "Asia/Kolkata (IST)" },
+  { value: "Asia/Mumbai", label: "Asia/Mumbai (IST)" },
+  { value: "Asia/Dhaka", label: "Asia/Dhaka (BST)" },
+  { value: "Asia/Bangkok", label: "Asia/Bangkok (ICT)" },
+  { value: "Asia/Singapore", label: "Asia/Singapore (SGT)" },
+  { value: "Asia/Hong_Kong", label: "Asia/Hong Kong (HKT)" },
+  { value: "Asia/Shanghai", label: "Asia/Shanghai (CST)" },
+  { value: "Asia/Tokyo", label: "Asia/Tokyo (JST)" },
+  { value: "Asia/Seoul", label: "Asia/Seoul (KST)" },
+  { value: "Asia/Manila", label: "Asia/Manila (PHT)" },
+  { value: "Asia/Jakarta", label: "Asia/Jakarta (WIB)" },
+  { value: "Asia/Kuala_Lumpur", label: "Asia/Kuala Lumpur (MYT)" },
+  { value: "Asia/Taipei", label: "Asia/Taipei (CST)" },
+  { value: "Asia/Tehran", label: "Asia/Tehran (IRST/IRDT)" },
+  { value: "Asia/Jerusalem", label: "Asia/Jerusalem (IST/IDT)" },
+  { value: "Asia/Riyadh", label: "Asia/Riyadh (AST)" },
+  
+  // Pacific
+  { value: "Australia/Sydney", label: "Australia/Sydney (AEST/AEDT)" },
+  { value: "Australia/Melbourne", label: "Australia/Melbourne (AEST/AEDT)" },
+  { value: "Australia/Brisbane", label: "Australia/Brisbane (AEST)" },
+  { value: "Australia/Perth", label: "Australia/Perth (AWST)" },
+  { value: "Australia/Adelaide", label: "Australia/Adelaide (ACST/ACDT)" },
+  { value: "Pacific/Auckland", label: "Pacific/Auckland (NZST/NZDT)" },
+  { value: "Pacific/Fiji", label: "Pacific/Fiji (FJT/FJST)" },
+  { value: "Pacific/Honolulu", label: "Pacific/Honolulu (HST)" },
+  
+  // Africa
+  { value: "Africa/Cairo", label: "Africa/Cairo (EET)" },
+  { value: "Africa/Johannesburg", label: "Africa/Johannesburg (SAST)" },
+  { value: "Africa/Lagos", label: "Africa/Lagos (WAT)" },
+  { value: "Africa/Nairobi", label: "Africa/Nairobi (EAT)" },
+  { value: "Africa/Casablanca", label: "Africa/Casablanca (WET/WEST)" },
+  
+  // UTC
+  { value: "UTC", label: "UTC (Coordinated Universal Time)" },
+];
+
 export default function InstallerPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<InstallStep>(1);
@@ -521,11 +597,12 @@ export default function InstallerPage() {
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">America/New York</SelectItem>
-                      <SelectItem value="Europe/London">Europe/London</SelectItem>
-                      <SelectItem value="Asia/Tokyo">Asia/Tokyo</SelectItem>
+                    <SelectContent className="max-h-[300px]">
+                      {TIMEZONES.map((tz) => (
+                        <SelectItem key={tz.value} value={tz.value}>
+                          {tz.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -784,6 +861,13 @@ export default function InstallerPage() {
                   />
                 </div>
               </div>
+              
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  You can configure WhatsApp credentials later from the admin dashboard if needed.
+                </AlertDescription>
+              </Alert>
               
               <div className="flex justify-between gap-3 mt-6">
                 <Button onClick={() => setCurrentStep(5)} variant="outline">
