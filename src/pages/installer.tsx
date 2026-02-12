@@ -291,21 +291,40 @@ export default function InstallerPage() {
       const data = await response.json();
       
       if (!response.ok) {
-        if (data.instructions) {
-          const instructionsText = Array.isArray(data.instructions) 
-            ? data.instructions.join('\n') 
-            : data.instructions;
-          setError(`${data.error}\n\n${data.details}\n\nFIX:\n${instructionsText}\n\n${data.fix || ''}`);
-        } else {
-          setError(data.error || data.details || "Failed to initialize database");
+        console.error("[Installer] Database init failed:", data);
+        
+        let errorDisplay = `❌ ${data.error || "Database Initialization Failed"}\n\n`;
+        
+        if (data.userMessage) {
+          errorDisplay += `⚠️ ${data.userMessage}\n\n`;
         }
+        
+        if (data.details) {
+          errorDisplay += `📋 Details: ${data.details}\n\n`;
+        }
+        
+        if (data.suggestions && Array.isArray(data.suggestions)) {
+          errorDisplay += `💡 Suggestions:\n${data.suggestions.join('\n')}\n\n`;
+        }
+        
+        if (data.instructions && Array.isArray(data.instructions)) {
+          errorDisplay += `📝 Instructions:\n${data.instructions.join('\n')}\n\n`;
+        }
+        
+        if (data.nextSteps && Array.isArray(data.nextSteps)) {
+          errorDisplay += `📍 Next Steps:\n${data.nextSteps.join('\n')}`;
+        }
+        
+        setError(errorDisplay);
         return;
       }
       
+      console.log("[Installer] Database initialized successfully");
       setDbInitialized(true);
       setError(null);
     } catch (err: any) {
-      setError(err.message || "Failed to initialize database");
+      console.error("[Installer] Database init error:", err);
+      setError(`🔥 Network Error: ${err.message || "Failed to communicate with server"}\n\nPlease check:\n1. Server is running\n2. Network connection is stable\n3. Try refreshing the page`);
     } finally {
       setLoading(false);
     }
@@ -416,20 +435,9 @@ export default function InstallerPage() {
 
       {!loading && error && (
         <Alert variant="destructive">
-          <AlertDescription className="space-y-2">
-            <p className="font-semibold">System Check Failed</p>
-            <p>{error}</p>
-            <div className="mt-4 p-4 bg-red-50 dark:bg-red-950 rounded-md text-sm">
-              <p className="font-semibold mb-2">🔧 Dokploy Users: Common Fix</p>
-              <p className="mb-2">If deploying on Dokploy, ensure these environment variables are set:</p>
-              <ul className="list-disc list-inside space-y-1 ml-2">
-                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXTAUTH_SECRET</code> - Generate with: <code className="bg-red-100 dark:bg-red-900 px-1 rounded">openssl rand -base64 32</code></li>
-                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXTAUTH_URL</code> - Your production domain</li>
-                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">ENCRYPTION_KEY</code> - Generate with: <code className="bg-red-100 dark:bg-red-900 px-1 rounded">openssl rand -hex 32</code></li>
-                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXT_PUBLIC_APP_URL</code> - Your production domain</li>
-                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">DATABASE_URL</code> - PostgreSQL connection string</li>
-              </ul>
-              <p className="mt-2">After adding these in Dokploy dashboard, redeploy and refresh this page.</p>
+          <AlertDescription>
+            <div className="space-y-3">
+              <pre className="whitespace-pre-wrap break-words font-sans text-sm">{error}</pre>
             </div>
           </AlertDescription>
         </Alert>

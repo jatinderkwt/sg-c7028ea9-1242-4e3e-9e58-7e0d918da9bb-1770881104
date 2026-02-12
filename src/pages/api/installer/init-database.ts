@@ -30,34 +30,51 @@ export default async function handler(
 
   try {
     // Step 1: Test database connection
+    console.log("[Init DB] Testing database connection...");
     await prisma.$connect();
-    await prisma.$queryRaw`SELECT 1`;
+    const connectionTest = await prisma.$queryRaw`SELECT 1`;
+    console.log("[Init DB] Database connection successful");
 
     // Step 2: Check if tables exist
-    const tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
-      SELECT tablename 
-      FROM pg_tables 
-      WHERE schemaname = 'public' AND tablename = 'SubscriptionPlan'
-    `;
+    console.log("[Init DB] Checking if database schema exists...");
+    let tables: Array<{ tablename: string }> = [];
+    
+    try {
+      tables = await prisma.$queryRaw<Array<{ tablename: string }>>`
+        SELECT tablename 
+        FROM pg_tables 
+        WHERE schemaname = 'public' AND tablename = 'Tenant'
+      `;
+    } catch (tableCheckError: any) {
+      console.error("[Init DB] Error checking tables:", tableCheckError.message);
+    }
 
     const hasTables = tables.length > 0;
+    console.log("[Init DB] Tables exist:", hasTables);
 
     if (!hasTables) {
-      return res.status(500).json({
-        error: "Database tables not initialized",
-        details: "Please run: npx prisma migrate deploy",
+      console.error("[Init DB] Database schema not found - migrations not run");
+      return res.status(400).json({
+        error: "Database schema not found",
+        details: "Prisma migrations have not been run yet",
         instructions: [
-          "1. Run: npx prisma migrate deploy",
-          "2. Then try initializing again",
-          "3. Or manually run: npm run setup:db"
+          "Before running the installer, you must initialize the database schema:",
+          "1. Open terminal in project directory",
+          "2. Run: npx prisma migrate deploy",
+          "3. Then return to this installer and try Step 2 again",
+          "",
+          "If migrations still fail, try:",
+          "- npm run setup:db"
         ]
       });
     }
 
     // Step 3: Check for existing data
+    console.log("[Init DB] Checking for existing data...");
     const existingTenant = await prisma.tenant.findFirst();
     
     if (existingTenant) {
+      console.log("[Init DB] System already initialized");
       return res.status(400).json({
         error: "Database already initialized",
         details: "Default data already exists in the database."
@@ -65,6 +82,7 @@ export default async function handler(
     }
 
     // Step 4: Create System Tenant
+    console.log("[Init DB] Creating System tenant...");
     const systemTenant = await prisma.tenant.create({
       data: {
         name: "System",
@@ -72,8 +90,10 @@ export default async function handler(
         isActive: true,
       },
     });
+    console.log("[Init DB] System tenant created:", systemTenant.id);
 
     // Step 5: Create Roles with Permissions
+    console.log("[Init DB] Creating roles...");
     const rolePermissions = {
       super_admin: [
         { resource: "tenants", action: "create" },
@@ -117,6 +137,7 @@ export default async function handler(
         },
       },
     });
+    console.log("[Init DB] super_admin role created");
 
     await prisma.role.create({
       data: {
@@ -132,6 +153,7 @@ export default async function handler(
         },
       },
     });
+    console.log("[Init DB] admin role created");
 
     await prisma.role.create({
       data: {
@@ -147,6 +169,7 @@ export default async function handler(
         },
       },
     });
+    console.log("[Init DB] manager role created");
 
     await prisma.role.create({
       data: {
@@ -162,8 +185,10 @@ export default async function handler(
         },
       },
     });
+    console.log("[Init DB] agent role created");
 
     // Step 6: Create Subscription Plans
+    console.log("[Init DB] Creating subscription plans...");
     await prisma.subscriptionPlan.createMany({
       data: [
         {
@@ -244,7 +269,9 @@ export default async function handler(
         },
       ],
     });
+    console.log("[Init DB] Subscription plans created");
 
+    console.log("[Init DB] ✅ Database initialization completed successfully");
     return res.status(200).json({
       success: true,
       message: "Database initialized successfully",
@@ -256,14 +283,71 @@ export default async function handler(
     });
 
   } catch (error: any) {
-    console.error("Database initialization error:", error);
-
+    console.error("[Init DB] ❌ Database initialization error:", error);
+    
     const errorMessage = error.message || "Unknown error occurred";
+    const errorCode = error.code || "UNKNOWN";
+    
+    // Parse specific Prisma errors
+    let userFriendlyMessage = errorMessage;
+    let suggestions: string[] = [];
+
+    if (errorCode === "P1000") {
+      userFriendlyMessage = "Could not connect to the database server";
+      suggestions = [
+        "1. Check if PostgreSQL is running",
+        "2. Verify DATABASE_URL in .env file",
+        "3. Check username and password are correct",
+        "4. Verify the database exists"
+      ];
+    } else if (errorCode === "P1001") {
+      userFriendlyMessage = "Could not reach the database server";
+      suggestions = [
+        "1. Check database server is accessible",
+        "2. Check network connectivity",
+        "3. Verify hostname/IP address is correct"
+      ];
+    } else if (errorCode === "P1002") {
+      userFriendlyMessage = "The database server timed out";
+      suggestions = [
+        "1. Check database server status",
+        "2. Try again in a moment",
+        "3. Check network stability"
+      ];
+    } else if (errorCode === "P1008") {
+      userFriendlyMessage = "Operations timed out";
+      suggestions = [
+        "1. Try again - the database might be slow",
+        "2. Check database server resources",
+        "3. Try restarting the database"
+      ];
+    } else if (errorMessage.includes("does not exist")) {
+      userFriendlyMessage = "Database or schema not found";
+      suggestions = [
+        "1. Create the database first",
+        "2. Or run migrations: npx prisma migrate deploy"
+      ];
+    } else if (errorMessage.includes("permission denied")) {
+      userFriendlyMessage = "Database permission denied";
+      suggestions = [
+        "1. Check database user permissions",
+        "2. Ensure user can create tables",
+        "3. Try with an admin user"
+      ];
+    }
     
     return res.status(500).json({
       error: "Database initialization failed",
+      userMessage: userFriendlyMessage,
       details: errorMessage,
-      code: error.code,
+      code: errorCode,
+      suggestions: suggestions,
+      nextSteps: [
+        "1. Check the error details above",
+        "2. Fix the database configuration",
+        "3. Run: npx prisma migrate deploy",
+        "4. Try the installer again"
+      ]
     });
   }
 }
