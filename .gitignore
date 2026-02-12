@@ -37,3 +37,10 @@ next-env.d.ts
 
 # firebase
 firebase-service-account.json
+
+# environment variables
+.env*
+!.env.example
+
+# generated secrets (from generate-secrets.js)
+.secrets-generated.txt
