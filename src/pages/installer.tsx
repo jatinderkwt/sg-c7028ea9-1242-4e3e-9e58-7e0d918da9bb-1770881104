@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SEO } from "@/components/SEO";
+import Link from "next/link";
 
 type SystemCheck = {
   name: string;
@@ -218,58 +219,99 @@ export default function InstallerPage() {
 
   const renderSystemChecks = () => (
     <div className="space-y-4">
-      {/* Header removed as it is provided by the Card */}
-
       {loading && (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
         </div>
       )}
 
-      {!loading && systemChecks.length > 0 && (
-        <div className="space-y-3">
-          {systemChecks.map((check, index) => (
-            <div
-              key={index}
-              className={`p-4 rounded-lg border ${
-                check.status === "success"
-                  ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
-                  : check.status === "warning"
-                  ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
-                  : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
-              }`}
-            >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    {check.status === "success" && (
-                      <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                    )}
-                    {check.status === "warning" && (
-                      <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                    )}
-                    {check.status === "error" && (
-                      <X className="h-5 w-5 text-red-600 dark:text-red-400" />
-                    )}
-                    <h3 className="font-semibold">{check.name}</h3>
-                  </div>
-                  <p className={`text-sm ${
-                    check.status === "success" ? "text-emerald-700 dark:text-emerald-300" :
-                    check.status === "warning" ? "text-yellow-700 dark:text-yellow-300" :
-                    "text-red-700 dark:text-red-300"
-                  }`}>
-                    {check.message}
-                  </p>
-                  {check.details && (
-                    <p className="text-xs mt-2 text-muted-foreground font-mono bg-white/50 dark:bg-black/20 p-2 rounded">
-                      {check.details}
+      {!loading && error && (
+        <Alert variant="destructive">
+          <AlertDescription className="space-y-2">
+            <p className="font-semibold">System Check Failed</p>
+            <p>{error}</p>
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-950 rounded-md text-sm">
+              <p className="font-semibold mb-2">🔧 Dokploy Users: Common Fix</p>
+              <p className="mb-2">If deploying on Dokploy, ensure these environment variables are set:</p>
+              <ul className="list-disc list-inside space-y-1 ml-2">
+                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXTAUTH_SECRET</code> - Generate with: <code className="bg-red-100 dark:bg-red-900 px-1 rounded">openssl rand -base64 32</code></li>
+                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXTAUTH_URL</code> - Your production domain</li>
+                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">ENCRYPTION_KEY</code> - Generate with: <code className="bg-red-100 dark:bg-red-900 px-1 rounded">openssl rand -hex 32</code></li>
+                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">NEXT_PUBLIC_APP_URL</code> - Your production domain</li>
+                <li><code className="bg-red-100 dark:bg-red-900 px-1 rounded">DATABASE_URL</code> - PostgreSQL connection string</li>
+              </ul>
+              <p className="mt-2">After adding these in Dokploy dashboard, redeploy and refresh this page.</p>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {!loading && !error && systemChecks.length > 0 && (
+        <>
+          {systemChecks.some(check => check.status === "error") && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription className="space-y-2">
+                <p className="font-semibold">⚠️ Some checks failed</p>
+                <p>Please resolve the issues below before proceeding.</p>
+                <div className="mt-3 p-3 bg-red-50 dark:bg-red-950 rounded text-sm">
+                  <p className="font-semibold mb-2">Quick Fix for Dokploy:</p>
+                  <ol className="list-decimal list-inside space-y-1">
+                    <li>Go to your Dokploy project dashboard</li>
+                    <li>Click on "Environment Variables"</li>
+                    <li>Add the missing variables shown below</li>
+                    <li>Click "Save" and redeploy</li>
+                    <li>Refresh this page</li>
+                  </ol>
+                  <p className="mt-2 text-xs">See <Link href="/docs#environment-setup" className="underline">full documentation</Link> or <a href="https://github.com/yourusername/yourproject/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener noreferrer" className="underline">DEPLOYMENT.md</a> for details.</p>
+                </div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-3">
+            {systemChecks.map((check, index) => (
+              <div
+                key={index}
+                className={`p-4 rounded-lg border ${
+                  check.status === "success"
+                    ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950"
+                    : check.status === "warning"
+                    ? "border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950"
+                    : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950"
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      {check.status === "success" && (
+                        <Check className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                      )}
+                      {check.status === "warning" && (
+                        <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                      )}
+                      {check.status === "error" && (
+                        <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      )}
+                      <h3 className="font-semibold">{check.name}</h3>
+                    </div>
+                    <p className={`text-sm ${
+                      check.status === "success" ? "text-emerald-700 dark:text-emerald-300" :
+                      check.status === "warning" ? "text-yellow-700 dark:text-yellow-300" :
+                      "text-red-700 dark:text-red-300"
+                    }`}>
+                      {check.message}
                     </p>
-                  )}
+                    {check.details && (
+                      <p className="text-xs mt-2 text-muted-foreground font-mono bg-white/50 dark:bg-black/20 p-2 rounded">
+                        {check.details}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {!loading && systemChecks.length > 0 && (

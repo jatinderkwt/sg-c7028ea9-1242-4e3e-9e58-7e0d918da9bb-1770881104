@@ -1,8 +1,46 @@
 # 🚀 Enterprise WhatsApp Business API Platform
 
-**Production-Ready Multi-Tenant SaaS with Full Meta Cloud API Compliance**
+**Production-Ready Multi-Tenant SaaS with Full Meta WhatsApp Cloud API Compliance**
 
-A comprehensive enterprise-grade WhatsApp Business API platform built with Next.js 15, PostgreSQL, and full Meta WhatsApp Cloud API integration. This platform includes a complete installation wizard, multi-tenant architecture, CRM, automation engine, and advanced analytics.
+---
+
+## ⚡ QUICK START FOR DOKPLOY DEPLOYMENT
+
+If you're deploying to Dokploy and the installer shows all checks failing, you need to set these environment variables first:
+
+### **Required Environment Variables (Add in Dokploy)**
+
+```bash
+# Authentication (CRITICAL - Generate these!)
+NEXTAUTH_SECRET="your-32-character-secret-here"
+NEXTAUTH_URL="https://yourdomain.com"
+
+# Encryption (CRITICAL - Generate this!)
+ENCRYPTION_KEY="your-64-character-hex-key-here"
+
+# App Configuration
+NEXT_PUBLIC_APP_URL="https://yourdomain.com"
+NODE_ENV="production"
+
+# Database
+DATABASE_URL="your-postgresql-connection-string"
+```
+
+### **Generate Keys:**
+```bash
+# Generate NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# Generate ENCRYPTION_KEY
+openssl rand -hex 32
+```
+
+**After setting these variables:**
+1. Redeploy in Dokploy
+2. Visit `/installer`
+3. System checks should pass ✅
+
+📖 **Full Dokploy deployment guide**: See [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ---
 
