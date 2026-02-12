@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Check, X, AlertCircle, Loader2, ArrowRight, ArrowLeft, CheckCircle, RefreshCw } from "lucide-react";
+import { Check, X, AlertCircle, Loader2, ArrowRight, ArrowLeft, CheckCircle, RefreshCw, CheckCircle2, Database } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -377,25 +377,77 @@ export default function InstallerPage() {
           <Card>
             <CardHeader>
               <CardTitle>Step 2: Database Initialization</CardTitle>
-              <CardDescription>Create database tables and seed default data</CardDescription>
+              <CardDescription>
+                Create database tables and seed default data
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error</AlertTitle>
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
-              
-              {!dbInitialized && (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground mb-4">
-                    Click the button below to initialize the database. This will create all necessary tables and seed default data.
-                  </p>
-                  <Button onClick={initializeDatabase} disabled={loading} size="lg">
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Initialize Database
+
+              {dbInitialized ? (
+                <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                  <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertTitle className="text-green-800 dark:text-green-200">Database Initialized</AlertTitle>
+                  <AlertDescription className="text-green-700 dark:text-green-300">
+                    All database tables have been created successfully. Default roles, permissions, and subscription plans have been seeded.
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <div className="space-y-4">
+                  <Alert>
+                    <Database className="h-4 w-4" />
+                    <AlertTitle>Database Setup Required</AlertTitle>
+                    <AlertDescription>
+                      Click the button below to initialize the database. This will:
+                      <ul className="list-disc list-inside mt-2 space-y-1">
+                        <li>Generate Prisma Client</li>
+                        <li>Create all database tables using Prisma migrations</li>
+                        <li>Create system tenant for global data</li>
+                        <li>Seed default roles (Super Admin, Admin, Manager, Agent)</li>
+                        <li>Create 52+ permissions for Super Admin</li>
+                        <li>Set up 4 subscription plans (Free, Starter, Professional, Enterprise)</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+
+                  <Button
+                    onClick={initializeDatabase}
+                    disabled={loading}
+                    className="w-full"
+                    size="lg"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Initializing Database...
+                      </>
+                    ) : (
+                      <>
+                        <Database className="mr-2 h-4 w-4" />
+                        Initialize Database
+                      </>
+                    )}
                   </Button>
+
+                  {loading && (
+                    <Alert>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <AlertTitle>Please Wait</AlertTitle>
+                      <AlertDescription>
+                        Database initialization is in progress. This may take 1-2 minutes.
+                        <br />
+                        <span className="text-xs text-muted-foreground mt-2 block">
+                          Do not close this window or refresh the page.
+                        </span>
+                      </AlertDescription>
+                    </Alert>
+                  )}
                 </div>
               )}
               
@@ -405,6 +457,16 @@ export default function InstallerPage() {
                 </Button>
               </div>
             </CardContent>
+            <CardFooter className="flex justify-between">
+              <Button variant="outline" onClick={() => setCurrentStep(1)} disabled={loading}>
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+              <Button onClick={() => setCurrentStep(3)} disabled={!dbInitialized || loading}>
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardFooter>
           </Card>
         );
 
