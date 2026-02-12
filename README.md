@@ -1,556 +1,327 @@
-# 🚀 Enterprise WhatsApp Business API Platform
+# WaFiz - WhatsApp Business SaaS Platform
 
-**Production-Ready Multi-Tenant SaaS with Full Meta WhatsApp Cloud API Compliance**
+A complete, production-ready WhatsApp Business API SaaS platform built with Next.js 14, PostgreSQL, and Stripe.
 
-## 🎯 Quick Start
+## 🚀 Features
 
-**Deploying to Dokploy?** → See [DOKPLOY-SETUP.md](./DOKPLOY-SETUP.md) for step-by-step guide
+### Core Platform
+- **Multi-tenant Architecture**: Separate workspaces for each organization
+- **WhatsApp Business Integration**: Full WhatsApp Cloud API integration
+- **Shared Inbox**: Real-time messaging with multi-agent support
+- **CRM System**: Contact management with custom fields and tags
+- **Automation**: Visual flow builder with triggers and actions
+- **Broadcast Campaigns**: Template-based message campaigns
+- **Analytics Dashboard**: Comprehensive metrics and reporting
+- **Templates Management**: WhatsApp template creation and approval tracking
 
-**Local Development?** → Continue below
+### User Roles
+- **Super Admin**: Global system control
+- **Manager**: Team and workspace management
+- **Agent**: Customer support and messaging
 
----
+### Advanced Features
+- AI-powered auto-replies
+- Keyword-based automation
+- Lead scoring
+- Conversation routing
+- Multi-language support
+- Voice-to-text capability
+- Knowledge base integration
+- Campaign analytics
 
-## ✨ **Key Features**
+### Monetization
+- **Stripe Integration**: Subscription management
+- **Multi-tier Plans**: Starter, Growth, Enterprise
+- **Usage-based Metrics**: Number limits, agent limits, contact limits
+- **Billing Dashboard**: Invoice history and payment methods
+- **Admin Analytics**: Revenue, MRR, churn tracking
 
-### 🎯 **Core Platform**
-- ✅ **Multi-Tenant SaaS Architecture** - Complete tenant isolation with per-tenant data, settings, and branding
-- ✅ **First-Access Installation Wizard** - 9-step guided setup for system initialization
-- ✅ **Role-Based Access Control** - Super Admin, Admin, Manager, Agent roles with granular permissions
-- ✅ **Enterprise Authentication** - JWT-based auth with secure HTTP-only cookies
-- ✅ **Multi-Theme System** - Light/dark mode with custom branding per tenant
+### Web Installer
+- Step-by-step setup wizard
+- Database configuration
+- Admin user creation
+- Platform settings
 
-### 💬 **WhatsApp Integration**
-- ✅ **Meta Cloud API Integration** - Official WhatsApp Business API with full compliance
-- ✅ **24-Hour Messaging Window Enforcement** - Automatic validation and blocking
-- ✅ **Template Management** - Create, submit, and track approval status
-- ✅ **Real-Time Webhooks** - Instant message delivery and status updates
-- ✅ **Media Support** - Text, images, audio, video, documents
-- ✅ **Message Status Tracking** - Sent, delivered, read, failed states
+## 📋 Tech Stack
 
-### 📊 **CRM & Business Tools**
-- ✅ **Contact Management** - Full contact lifecycle with custom fields and segmentation
-- ✅ **Deal Pipeline** - Track sales opportunities through customizable stages
-- ✅ **Task Management** - Assign and track follow-ups with due dates
-- ✅ **Conversation Inbox** - Unified inbox with assignment and routing
-- ✅ **Opt-In Compliance** - Track consent source, timestamp, and proof
+- **Frontend**: Next.js 14 (App Router), React, TypeScript, TailwindCSS
+- **Backend**: Next.js API Routes
+- **Database**: PostgreSQL + Prisma ORM
+- **Authentication**: JWT + NextAuth.js
+- **Payment**: Stripe
+- **UI Components**: Custom + Tailwind
+- **Charts**: Recharts
+- **Form Handling**: React Hook Form + Zod
 
-### 🤖 **Automation & Campaigns**
-- ✅ **Campaign Engine** - Schedule and send template-based broadcasts
-- ✅ **Automation Workflows** - Trigger-based actions (keyword detection, status changes)
-- ✅ **Audience Segmentation** - Target contacts by tags, CRM stage, custom filters
-- ✅ **Batch Sending** - Queue-based message delivery with retry logic
+## 🛠️ Prerequisites
 
-### 📈 **Analytics & Reporting**
-- ✅ **Message Analytics** - Delivery rates, read rates, volume metrics
-- ✅ **Agent Performance** - Response times, resolution metrics, SLA tracking
-- ✅ **Campaign Reports** - Delivery success, engagement tracking
-- ✅ **Business Intelligence** - Deal pipeline, revenue tracking, contact growth
+- Node.js 18.17.0+
+- PostgreSQL 13+
+- npm or yarn
 
-### 🔐 **Security & Compliance**
-- ✅ **AES-256-GCM Encryption** - Secure credential storage
-- ✅ **Webhook Signature Validation** - Verify Meta webhook authenticity
-- ✅ **Audit Logging** - Track all sensitive operations
-- ✅ **Meta Policy Compliance** - 24h window, opt-in tracking, quality monitoring
-- ✅ **RBAC Middleware** - Endpoint-level permission enforcement
+## 📦 Installation
 
-### 💰 **Subscription & Billing**
-- ✅ **Subscription Plans** - Feature-based plan management
-- ✅ **Usage Tracking** - Monitor message quotas and limits
-- ✅ **Trial Management** - Automated trial periods
-- ✅ **Billing Cycles** - Monthly/yearly subscriptions
+### 1. Clone or extract the project
 
----
-
-## 🏗 **Architecture**
-
-```
-/src
-  /pages
-    /api
-      /auth              # Authentication endpoints
-      /installer         # 9-step installation wizard
-      /contacts          # Contact CRUD operations
-      /conversations     # Conversation management
-      /messages          # Message sending & retrieval
-      /templates         # Template lifecycle management
-      /campaigns         # Campaign creation & execution
-      /automations       # Workflow automation
-      /deals             # CRM deal pipeline
-      /tasks             # Task management
-      /users             # User management
-      /roles             # Role & permission management
-      /tenants           # Tenant administration
-      /subscriptions     # Subscription management
-      /analytics         # Reporting endpoints
-      /audit-logs        # Audit trail
-      /webhook           # WhatsApp webhook handler
-    /installer.tsx       # Installation wizard UI
-    /index.tsx           # Landing page
-  /lib
-    /services
-      /meta-api.service.ts      # WhatsApp Cloud API wrapper
-      /message.service.ts       # Message business logic
-      /conversation.service.ts  # Conversation management
-      /contact.service.ts       # Contact operations
-      /subscription.service.ts  # Subscription management
-      /theme.service.ts         # Theme customization
-    /auth.ts             # JWT authentication utilities
-    /encryption.ts       # AES-256-GCM encryption
-    /prisma.ts           # Prisma client singleton
-    /installer.ts        # Installation utilities
-  /components
-    /ui                  # Shadcn/UI components
-    /SEO.tsx            # SEO meta tags
-    /ThemeSwitch.tsx    # Theme toggle
-  /contexts
-    /ThemeProvider.tsx  # Theme context
-  /styles
-    /globals.css        # Global styles + Tailwind
-/prisma
-  /schema.prisma        # Complete database schema
+```bash
+cd wabiz_new
 ```
 
----
-
-## 📦 **Database Schema**
-
-### **Core Models**
-- **Tenant** - Multi-tenant isolation root
-- **User** - System users with role assignments
-- **Role** - Role definitions with permissions
-- **Permission** - Granular access control
-- **WhatsAppAccount** - Encrypted WhatsApp credentials
-- **SubscriptionPlan** - Pricing tiers
-- **Subscription** - Tenant subscriptions
-
-### **Messaging Models**
-- **Contact** - Customer database with opt-in tracking
-- **Conversation** - Chat threads with 24h window tracking
-- **Message** - Individual messages with status
-- **Template** - WhatsApp message templates
-- **Campaign** - Broadcast campaigns
-
-### **CRM Models**
-- **Deal** - Sales pipeline opportunities
-- **Task** - Follow-up tasks and reminders
-
-### **System Models**
-- **Automation** - Workflow definitions
-- **AuditLog** - Security audit trail
-
----
-
-## 🚀 **Installation Wizard**
-
-### **Step-by-Step Setup**
-
-#### **Step 1: System Requirements Check**
-- ✅ Node.js version validation
-- ✅ PostgreSQL connectivity test
-- ✅ Environment variables verification
-- ✅ File permissions check
-- ✅ Storage availability
-
-#### **Step 2: Database Initialization**
-- ✅ Auto-create all tables (Prisma migrations)
-- ✅ Seed default roles and permissions
-- ✅ Create default subscription plans
-
-#### **Step 3: Super Admin Creation**
-- 👤 Admin credentials setup
-- 🔐 Secure password hashing (bcrypt)
-- 🌍 Timezone & language preferences
-
-#### **Step 4: Company Setup**
-- 🏢 Company profile configuration
-- 📧 Contact information
-- 💱 Currency & timezone settings
-- 🎨 Logo upload
-
-#### **Step 5: SaaS Configuration**
-- 📊 Enable/disable multi-tenancy
-- 🆓 Set trial duration
-- 💳 Configure payment gateways
-
-#### **Step 6: Email & Notifications**
-- 📧 SMTP configuration
-- ✉️ Email template setup
-- ✅ Test email delivery
-
-#### **Step 7: WhatsApp API Setup**
-- 📱 Meta App credentials
-- 🔑 Access token configuration
-- 🔗 Webhook URL setup
-- ✅ API connectivity test
-
-#### **Step 8: System Preferences**
-- 🎨 Default theme selection
-- 📅 Date/time format
-- ⏱️ Auto-logout settings
-- 📁 File upload limits
-
-#### **Step 9: Final Summary**
-- 📋 Configuration review
-- ✅ Complete installation
-- 🔒 Lock installer
-- 🚀 Redirect to login
-
----
-
-## 🔧 **Environment Setup**
-
-### **1. Install Dependencies**
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### **2. Configure Environment Variables**
+### 3. Set up environment variables
 
-Update `.env.local`:
-
-```env
-# Database (CRITICAL: Must include ?schema=public)
-DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi?schema=public"
-
-# JWT Authentication
-JWT_SECRET="your-super-secure-jwt-secret-key-change-this"
-
-# Encryption (32 bytes hex)
-ENCRYPTION_KEY="0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-
-# Meta WhatsApp Cloud API
-META_APP_ID="your-meta-app-id"
-META_APP_SECRET="your-meta-app-secret"
-META_API_VERSION="v21.0"
-WEBHOOK_VERIFY_TOKEN="your-webhook-verify-token"
-WEBHOOK_APP_SECRET="your-webhook-app-secret"
-
-# Application
-NODE_ENV="development"
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-```
-
-### **3. Run Database Migrations**
+Copy `.env.example` to `.env.local` and configure:
 
 ```bash
-npx prisma migrate dev --name init
-npx prisma generate
+cp .env.example .env.local
 ```
 
-### **4. Start Development Server**
+Key environment variables to configure:
+- `DATABASE_URL`: PostgreSQL connection string
+- `NEXTAUTH_SECRET`: Secret for NextAuth (generate: `openssl rand -base64 32`)
+- `NEXTAUTH_URL`: Your application URL
+- `STRIPE_SECRET_KEY`: Stripe secret key (get from dashboard)
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`: Stripe publishable key
+- And other integration keys as needed
+
+### 4. Set up PostgreSQL database
+
+Create a PostgreSQL database:
+
+```sql
+CREATE DATABASE wabiz_db;
+```
+
+### 5. Run database migrations
+
+Generate Prisma client:
+```bash
+npm run db:generate
+```
+
+Run migrations:
+```bash
+npm run db:migrate
+```
+
+### 6. Start the development server
 
 ```bash
 npm run dev
 ```
 
-### **5. Access Installation Wizard**
+Visit http://localhost:3000 in your browser.
 
-Navigate to: `http://localhost:3000/installer`
+## 🔧 First Time Setup
 
----
+When you start the application for the first time:
 
-## 📡 **API Endpoints**
+1. You'll be redirected to the Installation Wizard (`/install`)
+2. Follow the steps:
+   - **System Check**: Verify environment requirements
+   - **Database Configuration**: Enter PostgreSQL credentials
+   - **Admin User**: Create your super admin account
+   - **Platform Settings**: Configure platform name, currency, timezone
+   - **Complete**: Installation finished
 
-### **Authentication**
-```
-POST   /api/auth/login       # User login
-POST   /api/auth/logout      # User logout
-GET    /api/auth/me          # Get current user
-```
+3. After completion, you'll be redirected to the login page
+4. Log in with your admin credentials
+5. Access the dashboard at `/dashboard`
 
-### **Contacts**
-```
-GET    /api/contacts         # List contacts (paginated, searchable)
-POST   /api/contacts         # Create contact
-GET    /api/contacts/:id     # Get contact details
-PUT    /api/contacts/:id     # Update contact
-DELETE /api/contacts/:id     # Delete contact
-```
+## 📁 Project Structure
 
-### **Conversations**
 ```
-GET    /api/conversations              # List conversations
-GET    /api/conversations/:id/messages # Get messages in conversation
-```
-
-### **Messages**
-```
-POST   /api/messages/send    # Send message (auto 24h validation)
-```
-
-### **Templates**
-```
-GET    /api/templates        # List templates
-POST   /api/templates        # Create template
-POST   /api/templates/submit # Submit to Meta for approval
-POST   /api/templates/status # Check approval status
-```
-
-### **Campaigns**
-```
-GET    /api/campaigns        # List campaigns
-POST   /api/campaigns        # Create campaign
-```
-
-### **CRM**
-```
-GET    /api/deals            # List deals
-POST   /api/deals            # Create deal
-GET    /api/tasks            # List tasks
-POST   /api/tasks            # Create task
+wabiz_new/
+├── src/
+│   ├── app/
+│   │   ├── (auth)/          # Authentication routes
+│   │   ├── (installer)/     # Installer wizard
+│   │   ├── (dashboard)/     # Main dashboard
+│   │   ├── (marketing)/     # Landing pages
+│   │   ├── api/             # API routes
+│   │   │   ├── auth/        # Authentication endpoints
+│   │   │   ├── install/     # Installation endpoints
+│   │   │   ├── whatsapp/    # WhatsApp integration
+│   │   │   ├── stripe/      # Stripe webhook handlers
+│   │   │   ├── contacts/    # Contact management
+│   │   │   ├── conversations/ # Messaging
+│   │   │   ├── automations/ # Automation flows
+│   │   │   ├── campaigns/   # Campaign management
+│   │   │   └── templates/   # Template management
+│   │   ├── components/      # Reusable React components
+│   │   ├── lib/            # Utility functions
+│   │   ├── utils/          # Helper functions
+│   │   └── globals.css     # Global styles
+│   └── ...
+├── prisma/
+│   ├── schema.prisma       # Database schema
+│   └── migrations/         # Migration files
+├── public/                 # Static assets
+├── package.json
+├── tsconfig.json
+├── tailwind.config.ts
+├── next.config.js
+└── .env.local             # Environment variables (local)
 ```
 
-### **Administration**
-```
-GET    /api/users            # List users (RBAC)
-POST   /api/users            # Create user (Admin+)
-GET    /api/roles            # List roles
-POST   /api/roles            # Create role (Admin+)
-GET    /api/tenants          # List tenants (Super Admin)
-POST   /api/tenants          # Create tenant (Super Admin)
-GET    /api/subscriptions    # Subscription management
-```
+## 🗄️ Database Schema
 
-### **Analytics**
-```
-GET    /api/analytics/overview # Get dashboard metrics
-```
+### Core Tables
+- **User**: User accounts
+- **Workspace**: Organization workspaces
+- **WorkspaceMember**: User-workspace relationship with roles
+- **WorkspaceSettings**: Workspace-specific settings
 
-### **System**
-```
-GET    /api/audit-logs       # Audit trail (Admin+)
-```
+### WhatsApp Integration
+- **WhatsAppNumber**: Connected phone numbers
+- **Contact**: Customer contacts
+- **Conversation**: Chat conversations
+- **Message**: Individual messages
 
-### **Webhooks**
-```
-GET    /api/webhook/whatsapp # Webhook verification
-POST   /api/webhook/whatsapp # Receive WhatsApp events
-```
+### Features
+- **Automation**: Automation flows and actions
+- **Campaign**: Broadcast campaigns
+- **CampaignRecipient**: Campaign delivery tracking
+- **WhatsAppTemplate**: Message templates
+- **AnalyticsData**: Daily analytics metrics
 
----
+### Billing
+- **Plan**: Subscription plans
+- **Subscription**: Active subscriptions
+- **Invoice**: Billing invoices
 
-## 🔐 **Security Features**
+## 🔐 Security Features
 
-### **Authentication & Authorization**
-- JWT tokens with 7-day expiration
-- HTTP-only secure cookies
-- Role-based middleware on all protected endpoints
-- Session validation on every request
+- CSRF protection
+- Rate limiting
+- Input validation
+- Password hashing with bcrypt
+- JWT-based authentication
+- Role-based access control
+- Secure Stripe webhook verification
 
-### **Data Protection**
-- AES-256-GCM encryption for sensitive credentials
-- Bcrypt password hashing (10 rounds)
-- Webhook signature validation (HMAC-SHA256)
-- SQL injection prevention (Prisma ORM)
+## 📚 API Documentation
 
-### **Compliance**
-- GDPR-ready audit logging
-- Opt-in consent tracking with proof
-- Data retention policies
-- Secure credential storage
+### Authentication Endpoints
+- `POST /api/auth/login` - User login
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get current user
 
----
+### WhatsApp Endpoints
+- `GET /api/whatsapp/numbers` - List phone numbers
+- `POST /api/whatsapp/send-message` - Send message
+- `POST /api/whatsapp/webhook` - Webhook handler
 
-## 🎨 **Customization**
+### Contacts Endpoints
+- `GET /api/contacts` - List contacts
+- `POST /api/contacts` - Create contact
+- `GET /api/contacts/:id` - Get contact details
+- `PUT /api/contacts/:id` - Update contact
 
-### **Theme System**
-Each tenant can customize:
-- Primary & secondary colors
-- Light/dark mode preference
-- Font family
-- Border radius
-- Logo & branding assets
+### Campaigns Endpoints
+- `GET /api/campaigns` - List campaigns
+- `POST /api/campaigns` - Create campaign
+- `POST /api/campaigns/:id/send` - Send campaign
 
-### **Access via API**
-```typescript
-// Get tenant theme
-GET /api/theme
+### Stripe Endpoints
+- `POST /api/stripe/create-checkout` - Create checkout session
+- `POST /api/stripe/webhook` - Webhook handler
+- `GET /api/billing/invoices` - Get invoices
 
-// Update theme
-PUT /api/theme
-{
-  "mode": "dark",
-  "primaryColor": "#10b981",
-  "secondaryColor": "#3b82f6",
-  "fontFamily": "Inter",
-  "borderRadius": "0.5rem"
-}
-```
+## 🚀 Production Deployment
 
----
+### Environment Setup
+1. Set up PostgreSQL on production
+2. Configure all environment variables
+3. Set `NODE_ENV=production`
+4. Generate new `NEXTAUTH_SECRET`
 
-## 📊 **Meta WhatsApp Compliance**
-
-### **✅ 24-Hour Customer Service Window**
-- Automatic window tracking on inbound messages
-- Free-form messaging only within 24 hours
-- Template-only messaging outside window
-- API returns error if window expired
-
-### **✅ Template-Based Messaging**
-- Support for Marketing, Utility, Authentication categories
-- Parameter substitution
-- Multi-language support
-- Approval status sync with Meta
-
-### **✅ Opt-In Compliance**
-- Store opt-in source (web form, phone, in-person)
-- Record opt-in timestamp
-- Store proof reference (message ID, form submission ID)
-- Block messaging to contacts without opt-in
-
-### **✅ Quality Monitoring**
-- Message delivery rate tracking
-- Failure reason logging
-- Quality score monitoring
-- Rate limiting support
-
----
-
-## 🚀 **Deployment**
-
-### **Vercel (Recommended)**
-
-1. Push to GitHub
-2. Connect to Vercel
-3. Set environment variables
-4. Deploy
-
-### **Docker**
-
-```dockerfile
-FROM node:20-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npx prisma generate
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
-
-### **VPS**
-
+### Build and Deploy
 ```bash
-# Install Node.js 20+
-# Install PostgreSQL 14+
-# Clone repository
-git clone <your-repo>
-cd whatsapp-platform
-
-# Install dependencies
-npm ci
-
-# Setup environment
-cp .env.example .env
-nano .env
-
-# Run migrations
-npx prisma migrate deploy
-
-# Build
 npm run build
-
-# Start with PM2
-pm2 start ecosystem.config.js
-pm2 save
+npm start
 ```
 
----
+### Deployment Platforms
+- **Vercel**: Zero-config deployment
+- **AWS**: EC2 or ECS
+- **Digital Ocean**: App Platform
+- **Heroku**: Traditional apps
+- **Self-hosted**: Any Linux server with Node.js
 
-## 📚 **Tech Stack**
+## 🔗 Integrations
 
-| Technology | Purpose |
-|------------|---------|
-| **Next.js 15** | React framework with Pages Router |
-| **TypeScript** | Type safety |
-| **PostgreSQL** | Relational database |
-| **Prisma ORM** | Database toolkit |
-| **Tailwind CSS** | Styling |
-| **Shadcn/UI** | Component library |
-| **JWT** | Authentication |
-| **Bcrypt** | Password hashing |
-| **Crypto (Node.js)** | AES-256-GCM encryption |
+- **WhatsApp Cloud API**: Message sending and receiving
+- **Stripe**: Payment processing and billing
+- **SendGrid/SMTP**: Email notifications
+- **Redis** (optional): Caching and sessions
+- **S3/Cloud Storage** (optional): Media storage
 
----
+## 📖 Documentation
 
-## 🎯 **Roadmap**
+Full documentation in `project_prs.md` includes:
+- Complete feature specifications
+- MultiTenant architecture details
+- All API endpoint specifications
+- Installer wizard flow
+- Marketing pages structure
+- Stripe integration details
 
-### **Phase 1: Core Platform** ✅
-- Multi-tenant architecture
-- Installation wizard
-- Authentication & RBAC
-- WhatsApp integration
-- Basic messaging
+## 🐛 Troubleshooting
 
-### **Phase 2: Advanced Features** ✅
-- CRM (Contacts, Deals, Tasks)
-- Campaign engine
-- Automation workflows
-- Analytics dashboard
-- Subscription management
+### Database Connection Failed
+- Check PostgreSQL is running
+- Verify DATABASE_URL in .env.local
+- Ensure database exists
 
-### **Phase 3: Enterprise (Next)**
-- Redis queue integration
-- WebSocket real-time updates
-- AI-powered features (sentiment analysis, auto-replies)
-- Advanced reporting
-- Payment gateway integration (Stripe, PayPal)
+### Installation Wizard Not Loading
+- Clear browser cache
+- Check NODE_ENV is not "production"
+- Verify NEXT_PUBLIC variables are set
 
----
+### API Errors
+- Check server logs: `npm run dev` terminal
+- Verify environment variables
+- Test API endpoints with Postman
 
-## 📖 **Documentation**
+## 📞 Support
 
-### **Getting Started**
-1. Complete installation wizard at `/installer`
-2. Configure WhatsApp API credentials in settings
-3. Create your first template
-4. Import contacts with opt-in data
-5. Send your first campaign
+For issues or questions:
+1. Check the project documentation
+2. Review the database schema in `prisma/schema.prisma`
+3. Check API route implementations
+4. Review component implementations
 
-### **Best Practices**
-- Always verify 24-hour window before sending messages
-- Store opt-in proof for compliance
-- Monitor message quality scores
-- Use templates for marketing outside 24h window
-- Implement proper error handling for webhook events
+## 📝 License
 
----
+This project is provided as-is for development and production use.
 
-## 🤝 **Support**
+## 🎯 Next Steps
 
-- **Documentation**: This README + inline code comments
-- **Issues**: GitHub Issues
-- **API Reference**: See "API Endpoints" section above
+1. **Configure Database**: Update .env.local with PostgreSQL details
+2. **Set up Stripe**: Add Stripe API keys
+3. **Configure WhatsApp**: Add WhatsApp Business Account credentials
+4. **Run Installation**: Start the app and complete the installation wizard
+5. **Test Core Features**: Create a workspace and test messaging
+6. **Deploy**: Push to production
 
----
+## 📊 Roadmap
 
-## 📄 **License**
-
-MIT License - feel free to use this for commercial projects.
-
----
-
-## 🙏 **Credits**
-
-Built with ❤️ using:
-- [Next.js](https://nextjs.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Shadcn/UI](https://ui.shadcn.com)
-- [Meta WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api)
+- [ ] AI chatbot integration
+- [ ] Advanced reporting and dashboards
+- [ ] Mobile app (React Native)
+- [ ] Slack integration
+- [ ] Zapier automation
+- [ ] SMS gateway support
+- [ ] Voice calling capabilities
+- [ ] Video message support
 
 ---
 
-## 🔗 **Quick Links**
-
-- **Landing Page**: `/`
-- **Installation Wizard**: `/installer`
-- **API Documentation**: See "API Endpoints" section
-- **Database Schema**: `prisma/schema.prisma`
-
----
-
-**🚀 Ready to revolutionize WhatsApp Business communication!**
+Built with ❤️ for modern customer communication.

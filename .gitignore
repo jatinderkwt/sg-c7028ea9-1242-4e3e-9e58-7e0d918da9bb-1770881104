@@ -1,46 +1,43 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Environment
+.env
+.env.local
+.env.*.local
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# testing
-/coverage
+# Production
+.next
+out
+build
+dist
 
-# next.js
-/.next/
-/out/
+# Testing
+coverage
+.jest
 
-# production
-/build
-
-# misc
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
 .DS_Store
-*.pem
 
-# debug
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# Prisma
+prisma/migrations/
+.env.test.local
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# firebase
-firebase-service-account.json
-
-# environment variables
-.env*
-!.env.example
-
-# generated secrets (from generate-secrets.js)
-.secrets-generated.txt
+# OS
+Thumbs.db
+.DS_Store
