@@ -1,15 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 type InstallerStep = 'check' | 'database' | 'admin' | 'settings' | 'complete'
+
+interface SystemChecks {
+  nodeVersion: string
+  platform: string
+  databaseConfigured: boolean
+  envConfigured: boolean
+  databaseError?: string
+}
 
 export default function InstallerPage() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState<InstallerStep>('check')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [checks, setChecks] = useState<SystemChecks | null>(null)
   
   const [formData, setFormData] = useState({
     // Database
@@ -31,6 +40,21 @@ export default function InstallerPage() {
     supportEmail: '',
   })
 
+  // Load system checks on mount
+  useEffect(() => {
+    const loadChecks = async () => {
+      try {
+        const response = await fetch('/api/install/check')
+        const data = await response.json()
+        setChecks(data.checks)
+      } catch (err) {
+        console.error('Failed to load system checks:', err)
+      }
+    }
+    
+    loadChecks()
+  }, [])
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -45,10 +69,16 @@ export default function InstallerPage() {
     if (step === 'database' && currentStep === 'check') {
       setLoading(true)
       try {
-        // Validate system requirements
+        // Reload checks to verify database
         const response = await fetch('/api/install/check', { method: 'GET' })
         if (!response.ok) {
           throw new Error('System check failed')
+        }
+        const data = await response.json()
+        setChecks(data.checks)
+        
+        if (!data.checks.databaseConfigured) {
+          throw new Error(data.checks.databaseError || 'Database is not properly configured. Please configure it manually.')
         }
         setCurrentStep(step)
       } catch (err) {
@@ -130,16 +160,36 @@ export default function InstallerPage() {
           {currentStep === 'check' && (
             <div>
               <h2 className="text-2xl font-bold mb-4 text-gray-800">System Requirements Check</h2>
-              <div className="space-y-3">
-                <div className="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
-                  <svg className="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                  <span className="text-green-800">Node version compatible</span>
+              {!checks ? (
+                <div className="text-center py-8">
+                  <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-2"></div>
+                  <p className="text-gray-600">Loading system checks...</p>
                 </div>
-                <div className="flex items-center p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <svg className="w-5 h-5 text-yellow-600 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                  <span className="text-yellow-800">Database pending configuration</span>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                    <svg className="w-5 h-5 text-green-600 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
+                    <span className="text-green-800">Node.js {checks.nodeVersion} compatible</span>
+                  </div>
+                  <div className={`flex items-center p-3 rounded-lg border ${checks.databaseConfigured ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                    <svg className={`w-5 h-5 mr-3 ${checks.databaseConfigured ? 'text-green-600' : 'text-red-600'}`} fill="currentColor" viewBox="0 0 20 20">
+                      {checks.databaseConfigured ? (
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      ) : (
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      )}
+                    </svg>
+                    <div>
+                      <span className={checks.databaseConfigured ? 'text-green-800' : 'text-red-800'}>
+                        {checks.databaseConfigured ? 'Database connected successfully' : 'Database connection failed'}
+                      </span>
+                      {checks.databaseError && (
+                        <p className="text-xs mt-1 text-gray-700">{checks.databaseError}</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
