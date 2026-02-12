@@ -10,23 +10,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === "GET") {
       await requireRole(["super_admin", "admin", "manager"], session);
       
+      // Removed complex include/select that was causing type issues
+      // Returning just necessary fields
       const users = await prisma.user.findMany({
         where: { tenantId: session.tenantId },
-        include: {
-          role: {
-            include: {
-              permissions: true,
-            },
-          },
-        },
         select: {
           id: true,
           email: true,
           name: true,
-          role: true,
           isActive: true,
           lastLoginAt: true,
           createdAt: true,
+          role: {
+             select: {
+                 id: true,
+                 name: true,
+                 description: true,
+             }
+          }
         },
         orderBy: { createdAt: "desc" },
       });

@@ -7,15 +7,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await requireAuth(req);
 
     if (req.method === "GET") {
-      const { search, tags, optInStatus, limit, offset } = req.query;
+      const { page, limit, search } = req.query;
       
-      const result = await contactService.getContacts({
-        tenantId: session.tenantId,
+      const result = await contactService.getContacts(session.tenantId, {
+        page: page ? Number(page) : 1,
+        limit: limit ? Number(limit) : 20,
         search: search as string,
-        tags: tags ? (tags as string).split(",") : undefined,
-        optInStatus: optInStatus as string,
-        limit: limit ? Number(limit) : undefined,
-        offset: offset ? Number(offset) : undefined,
       });
 
       return res.status(200).json(result);

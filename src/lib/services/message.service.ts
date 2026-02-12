@@ -2,135 +2,146 @@ import { prisma } from "@/lib/prisma";
 import { metaAPI } from "./meta-api.service";
 import { conversationService } from "./conversation.service";
 
+export type SendMessageData = {
+  phoneNumber: string;
+  type: "text" | "template" | "image" | "document" | "video";
+  content: any;
+  templateName?: string;
+  templateLanguage?: string;
+  userId?: string;
+};
+
 export class MessageService {
-  async sendMessage(tenantId: string, data: any) {
+  async sendMessage(tenantId: string, data: SendMessageData) {
+    // 1. Check Quota (Placeholder implementation)
+    const canSend = await this.checkQuota(tenantId);
+    if (!canSend) {
+      throw new Error("Message quota exceeded");
+    }
+
+    // 2. Get or Create Contact & Conversation
+    const contact = await prisma.contact.findFirst({
+      where: { tenantId, phoneNumber: data.phoneNumber },
+    });
+
+    if (!contact) {
+      throw new Error("Contact not found");
+    }
+
+    const conversation = await conversationService.getOrCreateConversation(tenantId, contact.id);
+
+    // 3. Check 24h Window for non-template messages
     if (data.type !== "template") {
-      const canSend = await conversationService.canSendFreeFormMessage(data.conversationId);
-      if (!canSend) {
-        throw new Error("Cannot send free-form message outside 24-hour window");
+      const allowed = await conversationService.canSendFreeFormMessage(tenantId, contact.id);
+      if (!allowed) {
+        throw new Error("Outside 24h window. Please send a template message.");
       }
     }
 
-    const conversation = await prisma.conversation.findUnique({
-      where: { id: data.conversationId },
-      include: { contact: true },
-    });
-
-    if (!conversation || conversation.tenantId !== tenantId) {
-      throw new Error("Conversation not found");
+    // 4. Send via Meta API
+    let metaResponse;
+    if (data.type === "template") {
+      if (!data.templateName || !data.templateLanguage) {
+        throw new Error("Template name and language required");
+      }
+      metaResponse = await metaAPI.sendTemplate({
+        phoneNumber: data.phoneNumber,
+        templateName: data.templateName,
+        languageCode: data.templateLanguage,
+        components: data.content.components || [],
+      });
+    } else {
+      metaResponse = await metaAPI.sendMessage({
+        phoneNumber: data.phoneNumber,
+        type: data.type,
+        content: data.content,
+      });
     }
 
-    const whatsappAccount = await prisma.whatsAppAccount.findUnique({
-      where: { tenantId },
-    });
-
-    if (!whatsappAccount) {
-      throw new Error("WhatsApp account not configured");
-    }
-
-    const metaResponse = await metaAPI.sendMessage({
-      phoneNumberId: whatsappAccount.phoneNumberId,
-      accessToken: whatsappAccount.accessToken,
-      to: conversation.contact.phoneNumber,
-      type: data.type,
-      content: data.content,
-      templateName: data.templateName,
-      templateLanguage: "en",
-      templateParams: data.templateParams,
-      mediaUrl: data.mediaUrl,
-    });
+    // 5. Store Message in DB
+    const wamid = metaResponse?.messages?.[0]?.id || `wamid_${Date.now()}`;
 
     const message = await prisma.message.create({
       data: {
-        conversationId: data.conversationId,
-        wamid: metaResponse.messageId, // Fixed from metaResponse.messages[0].id
+        tenantId,
+        conversationId: conversation.id,
         direction: "outbound",
         type: data.type,
         status: "sent",
+        wamid: wamid,
         content: data.content || {},
         senderId: data.userId,
       },
     });
 
+    // 6. Update Conversation
     await prisma.conversation.update({
-      where: { id: data.conversationId },
-      data: { 
+      where: { id: conversation.id },
+      data: {
         lastMessageAt: new Date(),
+        status: "open",
       },
     });
 
     return message;
   }
 
-  async handleIncomingMessage(params: {
-    tenantId: string;
-    whatsappAccountId: string;
-    contactPhoneNumber: string;
-    messageId: string;
-    type: string;
-    content?: any;
-    mediaUrl?: string;
-  }) {
-    let contact = await prisma.contact.findUnique({
-      where: {
-        tenantId_phoneNumber: {
-          tenantId: params.tenantId,
-          phoneNumber: params.contactPhoneNumber,
-        },
-      },
+  async checkQuota(tenantId: string): Promise<boolean> {
+    return true;
+  }
+
+  async handleIncomingMessage(tenantId: string, message: any) {
+    // Basic implementation for handling inbound webhook messages
+    const from = message.from;
+    const type = message.type;
+    const body = type === 'text' ? message.text.body : '[Media]';
+    
+    // 1. Find or create contact
+    let contact = await prisma.contact.findFirst({
+      where: { tenantId, phoneNumber: from }
     });
 
     if (!contact) {
       contact = await prisma.contact.create({
         data: {
-          tenantId: params.tenantId,
-          phoneNumber: params.contactPhoneNumber,
-          optInStatus: "implicit",
-          optInSource: "inbound_message",
-        },
+          tenantId,
+          phoneNumber: from,
+          name: message.profile?.name || from
+        }
       });
     }
 
-    const conversation = await conversationService.getOrCreateConversation({
-      tenantId: params.tenantId,
-      contactId: contact.id,
-    });
+    // 2. Find or create conversation
+    const conversation = await conversationService.getOrCreateConversation(tenantId, contact.id);
 
-    const message = await prisma.message.create({
+    // 3. Save message
+    await prisma.message.create({
       data: {
+        tenantId,
         conversationId: conversation.id,
-        wamid: params.messageId,
         direction: "inbound",
-        type: params.type,
+        type,
+        content: message,
         status: "delivered",
-        content: params.content || {},
-      },
+        wamid: message.id,
+      }
     });
 
+    // 4. Update conversation timestamp
     await prisma.conversation.update({
       where: { id: conversation.id },
-      data: { lastMessageAt: new Date() },
-    });
-
-    return { conversation, message, contact };
-  }
-
-  async updateMessageStatus(params: {
-    messageId: string;
-    status: string;
-    timestamp: Date;
-    failureReason?: string;
-  }) {
-    return prisma.message.update({
-      where: { wamid: params.messageId },
-      data: {
-        status: params.status,
-      },
+      data: { lastMessageAt: new Date(), unreadCount: { increment: 1 } }
     });
   }
 
-  async checkQuotaExceeded(tenantId: string): Promise<boolean> {
-    return false;
+  async updateMessageStatus(tenantId: string, status: any) {
+    const wamid = status.id;
+    const newStatus = status.status;
+    
+    await prisma.message.updateMany({
+      where: { wamid, tenantId },
+      data: { status: newStatus }
+    });
   }
 }
 

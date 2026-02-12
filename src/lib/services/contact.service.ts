@@ -10,7 +10,7 @@ export class ContactService {
         email: data.email,
         tags: data.tags || [],
         customFields: data.customFields || {},
-        optInStatus: data.optInStatus === "opted_in", // Convert string enum to boolean
+        optInStatus: data.optInStatus === "opted_in",
         optInSource: data.optInSource,
         optInProof: data.optInProof,
       },
@@ -42,6 +42,12 @@ export class ContactService {
     ]);
 
     return { contacts, total, page, totalPages: Math.ceil(total / limit) };
+  }
+
+  async getContact(tenantId: string, contactId: string) {
+    return await prisma.contact.findUnique({
+      where: { id: contactId },
+    });
   }
 
   async updateContact(tenantId: string, contactId: string, data: any) {

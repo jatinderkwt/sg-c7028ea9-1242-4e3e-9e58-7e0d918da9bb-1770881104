@@ -4,14 +4,12 @@ import { conversationService } from "@/lib/services/conversation.service";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await requireAuth(req);
-    const { id, limit } = req.query;
+    await requireAuth(req);
+
+    const { id } = req.query;
 
     if (req.method === "GET") {
-      const messages = await conversationService.getConversationMessages(
-        id as string,
-        limit ? Number(limit) : 50
-      );
+      const messages = await conversationService.getConversationMessages(id as string);
       return res.status(200).json({ messages });
     }
 

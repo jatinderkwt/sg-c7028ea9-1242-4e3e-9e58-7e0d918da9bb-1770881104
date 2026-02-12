@@ -1,62 +1,36 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { requireAuth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { metaAPI } from "@/lib/services/meta-api.service";
+import { prisma } from "@/lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await requireAuth(req);
 
-    if (req.method === "GET") {
-      const { templateId } = req.query;
+    if (req.method === "POST") {
+      const { templateId } = req.body;
 
       const template = await prisma.template.findUnique({
-        where: { id: templateId as string },
-        include: {
-          tenant: {
-            include: {
-              whatsappAccount: true,
-            },
-          },
-        },
+        where: { id: templateId },
       });
 
       if (!template || template.tenantId !== session.tenantId) {
         return res.status(404).json({ error: "Template not found" });
       }
 
-      const whatsappAccount = template.tenant.whatsappAccount;
-
-      if (!whatsappAccount || !template.name) {
-         // If not submitted yet or no account
-         return res.status(200).json({ status: template.status });
+      if (!template.metaId) {
+        return res.status(400).json({ error: "Template not submitted to Meta" });
       }
 
-      // Sync with Meta
-      try {
-        const metaStatus = await metaAPI.getTemplateStatus({
-          businessAccountId: whatsappAccount.wabaId,
-          accessToken: whatsappAccount.accessToken,
-          templateName: template.name
-        });
+      const status = await metaAPI.getTemplateStatus(template.metaId);
 
-        const updated = await prisma.template.update({
-          where: { id: template.id },
-          data: {
-            status: metaStatus.status,
-            // rejectionReason is not in schema, ignoring it
-          },
-        });
+      // Update local status
+      const updated = await prisma.template.update({
+        where: { id: templateId },
+        data: { status: status.status },
+      });
 
-        return res.status(200).json({ 
-          status: updated.status,
-          // rejectionReason: updated.rejectionReason 
-        });
-
-      } catch (error) {
-        console.error("Meta sync error", error);
-        return res.status(200).json({ status: template.status, error: "Sync failed" });
-      }
+      return res.status(200).json(updated);
     }
 
     return res.status(405).json({ error: "Method not allowed" });

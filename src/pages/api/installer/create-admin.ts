@@ -4,78 +4,70 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (isInstalled()) {
+    return res.status(403).json({ error: "System is already installed" });
+  }
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  if (isInstalled()) {
-    return res.status(403).json({ error: "System already installed" });
-  }
-
   try {
-    const { name, email, password, timezone, language } = req.body;
+    const { admin, company } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "Name, email, and password are required" });
-    }
-
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (existingUser) {
-      return res.status(400).json({ error: "Email already in use" });
-    }
-
+    // 1. Create Tenant
     const tenant = await prisma.tenant.create({
       data: {
-        name: "System",
-        domain: "system.local",
-        status: "active",
-        primaryColor: "#3B82F6",
-        secondaryColor: "#10B981",
-        theme: "light",
+        name: company.name,
+        email: company.email,
+        domain: company.website, // Assuming website as domain/identifier
+        isActive: true,
         settings: {
-          timezone: timezone || "UTC",
-          language: language || "en",
-          dateFormat: "YYYY-MM-DD",
-          timeFormat: "24h",
-        } as any,
+          phone: company.phone,
+          address: company.address,
+          country: company.country,
+          currency: company.currency,
+          timezone: company.timezone,
+          language: company.language,
+        },
       },
     });
 
-    const superAdminRole = await prisma.role.findUnique({
-      where: { name: "super_admin" },
+    // 2. Create Super Admin Role
+    // Use findFirst to avoid unique constraint issues if it exists, though it shouldn't
+    let adminRole = await prisma.role.findFirst({
+      where: {
+        tenantId: tenant.id,
+        name: "super_admin",
+      },
     });
 
-    if (!superAdminRole) {
-      return res.status(500).json({ error: "Super admin role not found. Please initialize database first." });
+    if (!adminRole) {
+      adminRole = await prisma.role.create({
+        data: {
+          tenantId: tenant.id,
+          name: "super_admin",
+          description: "Full system access",
+        },
+      });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 3. Create Super Admin User
+    const hashedPassword = await bcrypt.hash(admin.password, 10);
 
     const user = await prisma.user.create({
       data: {
-        email,
-        name,
-        password: hashedPassword,
-        roleId: superAdminRole.id,
         tenantId: tenant.id,
-        status: "active",
-        emailVerified: new Date(),
+        email: admin.email,
+        name: admin.name,
+        password: hashedPassword,
+        roleId: adminRole.id,
+        isActive: true,
       },
     });
 
-    return res.status(200).json({ 
-      success: true,
-      message: "Super admin created successfully",
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
-    });
-  } catch (error: unknown) {
+    return res.status(200).json({ success: true, tenantId: tenant.id, userId: user.id });
+  } catch (error: any) {
     console.error("Create admin error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return res.status(500).json({ error: errorMessage });

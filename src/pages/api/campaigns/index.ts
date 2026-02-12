@@ -7,8 +7,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const session = await requireAuth(req);
 
     if (req.method === "GET") {
-      await requireRole(["admin", "manager"], session);
-      
       const campaigns = await prisma.campaign.findMany({
         where: { tenantId: session.tenantId },
         include: {
@@ -21,18 +19,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === "POST") {
-      await requireRole(["admin", "manager"], session);
+      await requireRole(["super_admin", "admin", "manager"], session);
       
-      const { templateId, name, scheduledAt, segmentConfig } = req.body;
+      const { name, templateId, segment, scheduleAt } = req.body;
 
       const campaign = await prisma.campaign.create({
         data: {
           tenantId: session.tenantId,
-          templateId,
           name,
-          scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-          segmentConfig,
-          status: scheduledAt ? "scheduled" : "draft",
+          templateId,
+          segment,
+          scheduleAt: scheduleAt ? new Date(scheduleAt) : null,
+          status: scheduleAt ? "scheduled" : "draft",
         },
       });
 

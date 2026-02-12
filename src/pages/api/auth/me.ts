@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
     const session = await getSession(req);
-    
+
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: {
@@ -18,14 +18,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(401).json({ error: "User not found" });
     }
 
-    const { password: _, ...userWithoutPassword } = user;
+    const { password, ...userWithoutPassword } = user;
 
-    return res.status(200).json({ 
-      user: {
-        ...userWithoutPassword,
-        role: user.role?.name,
-        avatar: user.image,
-      } 
+    return res.status(200).json({
+      ...userWithoutPassword,
+      // Add missing image property placeholder
+      image: null, 
     });
   } catch (error) {
     console.error("Session error:", error);

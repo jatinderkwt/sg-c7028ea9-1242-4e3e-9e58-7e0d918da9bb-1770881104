@@ -30,6 +30,18 @@ export class ConversationService {
     });
   }
 
+  async getConversationMessages(conversationId: string) {
+    const conversation = await prisma.conversation.findUnique({
+      where: { id: conversationId },
+      include: {
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
+    return conversation?.messages || [];
+  }
+
   async createConversation(tenantId: string, contactId: string) {
     // Check if open conversation exists
     const existing = await prisma.conversation.findFirst({
@@ -47,9 +59,12 @@ export class ConversationService {
         tenantId,
         contactId,
         status: "open",
-        // Removed channel property as it's not in schema
       },
     });
+  }
+
+  async getOrCreateConversation(tenantId: string, contactId: string) {
+    return this.createConversation(tenantId, contactId);
   }
 
   async closeConversation(id: string) {
@@ -64,6 +79,25 @@ export class ConversationService {
       where: { id },
       data: { assignedToId: userId },
     });
+  }
+
+  async canSendFreeFormMessage(tenantId: string, contactId: string): Promise<boolean> {
+    const lastInbound = await prisma.message.findFirst({
+      where: {
+        tenantId,
+        conversation: { contactId },
+        direction: "inbound",
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (!lastInbound) return false;
+
+    const window = 24 * 60 * 60 * 1000; // 24 hours
+    const now = new Date().getTime();
+    const lastMsgTime = lastInbound.createdAt.getTime();
+
+    return now - lastMsgTime < window;
   }
 }
 
