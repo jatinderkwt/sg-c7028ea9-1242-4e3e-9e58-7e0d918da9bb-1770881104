@@ -1,61 +1,33 @@
 import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import { cookies } from "next/headers";
+import { NextApiRequest } from "next";
 
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
-
-export interface JWTPayload {
+export interface Session {
   userId: string;
   tenantId: string;
-  email: string;
   role: string;
 }
 
-export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, 12);
-}
+export async function getSession(req: NextApiRequest): Promise<Session> {
+  const token = req.cookies["auth-token"];
 
-export async function verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
-  return bcrypt.compare(password, hashedPassword);
-}
-
-export function generateToken(payload: JWTPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
-}
-
-export function verifyToken(token: string): JWTPayload | null {
-  try {
-    return jwt.verify(token, JWT_SECRET) as JWTPayload;
-  } catch {
-    return null;
-  }
-}
-
-export async function getSession(): Promise<JWTPayload | null> {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth-token")?.value;
-  
-  if (!token) return null;
-  
-  return verifyToken(token);
-}
-
-export async function requireAuth(): Promise<JWTPayload> {
-  const session = await getSession();
-  
-  if (!session) {
+  if (!token) {
     throw new Error("Unauthorized");
   }
-  
-  return session;
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "default_secret") as Session;
+    return decoded;
+  } catch (error) {
+    throw new Error("Unauthorized");
+  }
 }
 
-export async function requireRole(allowedRoles: string[]): Promise<JWTPayload> {
-  const session = await requireAuth();
-  
+export async function requireAuth(req: NextApiRequest): Promise<Session> {
+  return getSession(req);
+}
+
+export async function requireRole(allowedRoles: string[], session: Session): Promise<void> {
   if (!allowedRoles.includes(session.role)) {
     throw new Error("Forbidden");
   }
-  
-  return session;
 }

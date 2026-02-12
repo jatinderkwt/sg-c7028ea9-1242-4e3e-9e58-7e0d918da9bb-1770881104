@@ -43,7 +43,7 @@ export class MessageService {
     const message = await prisma.message.create({
       data: {
         conversationId: data.conversationId,
-        wamid: metaResponse.messages[0].id,
+        wamid: metaResponse.messageId, // Fixed from metaResponse.messages[0].id
         direction: "outbound",
         type: data.type,
         status: "sent",

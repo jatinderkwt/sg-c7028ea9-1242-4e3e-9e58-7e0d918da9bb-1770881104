@@ -9,59 +9,56 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const session = await requireRole(["admin", "manager"]);
+    const session = await requireAuth(req);
+    await requireRole(["admin", "manager"], session);
 
     const { templateId } = req.body;
 
-    if (!templateId) {
-      return res.status(400).json({ error: "Template ID is required" });
-    }
-
     const template = await prisma.template.findUnique({
       where: { id: templateId },
-      include: { whatsappAccount: true },
+      include: {
+        tenant: {
+          include: {
+            whatsappAccount: true,
+          },
+        },
+      },
     });
 
     if (!template || template.tenantId !== session.tenantId) {
       return res.status(404).json({ error: "Template not found" });
     }
 
-    if (template.status !== "pending") {
-      return res.status(400).json({ error: "Template already submitted" });
+    const whatsappAccount = template.tenant.whatsappAccount;
+
+    if (!whatsappAccount) {
+      return res.status(400).json({ error: "WhatsApp account not configured" });
     }
 
     try {
-      const result = await metaAPI.createTemplate({
-        businessAccountId: template.whatsappAccount.businessAccountId,
-        accessToken: template.whatsappAccount.accessToken,
+      const metaResponse = await metaAPI.createTemplate({
+        businessAccountId: whatsappAccount.wabaId,
+        accessToken: whatsappAccount.accessToken,
         name: template.name,
         category: template.category,
         language: template.language,
-        components: template.components as any[],
+        components: template.components as any[], // Cast JsonValue to any[]
       });
 
       await prisma.template.update({
         where: { id: templateId },
         data: {
-          metaTemplateId: result.templateId,
-          status: "submitted",
+          metaId: metaResponse.templateId,
+          status: "PENDING",
         },
       });
 
-      return res.status(200).json({ success: true, templateId: result.templateId });
-    } catch (error: any) {
-      await prisma.template.update({
-        where: { id: templateId },
-        data: {
-          status: "failed",
-          rejectionReason: error.message,
-        },
-      });
-
-      throw error;
+      return res.status(200).json({ success: true, templateId: metaResponse.templateId });
+    } catch (metaError: any) {
+      console.error("Meta API Error:", metaError);
+      return res.status(400).json({ error: "Failed to submit to Meta", details: metaError.message });
     }
   } catch (error: any) {
-    console.error("Template submit error:", error);
-    return res.status(error.message === "Unauthorized" ? 401 : 500).json({ error: error.message });
+    return res.status(error.message === "Unauthorized" ? 401 : error.message === "Forbidden" ? 403 : 500).json({ error: error.message });
   }
 }

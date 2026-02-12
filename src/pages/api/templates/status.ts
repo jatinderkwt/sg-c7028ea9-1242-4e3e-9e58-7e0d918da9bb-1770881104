@@ -4,53 +4,63 @@ import { prisma } from "@/lib/prisma";
 import { metaAPI } from "@/lib/services/meta-api.service";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "GET") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
   try {
-    const session = await requireAuth();
-    const { templateId } = req.query;
+    const session = await requireAuth(req);
 
-    if (!templateId) {
-      return res.status(400).json({ error: "Template ID is required" });
-    }
+    if (req.method === "GET") {
+      const { templateId } = req.query;
 
-    const template = await prisma.template.findUnique({
-      where: { id: templateId as string },
-      include: { whatsappAccount: true },
-    });
-
-    if (!template || template.tenantId !== session.tenantId) {
-      return res.status(404).json({ error: "Template not found" });
-    }
-
-    if (!template.metaTemplateId) {
-      return res.status(400).json({ error: "Template not submitted to Meta" });
-    }
-
-    try {
-      const status = await metaAPI.getTemplateStatus({
-        businessAccountId: template.whatsappAccount.businessAccountId,
-        accessToken: template.whatsappAccount.accessToken,
-        templateName: template.name,
-      });
-
-      await prisma.template.update({
+      const template = await prisma.template.findUnique({
         where: { id: templateId as string },
-        data: {
-          status: status.status,
-          rejectionReason: status.rejectionReason,
+        include: {
+          tenant: {
+            include: {
+              whatsappAccount: true,
+            },
+          },
         },
       });
 
-      return res.status(200).json(status);
-    } catch (error: any) {
-      console.error("Template status check error:", error);
-      return res.status(500).json({ error: error.message });
+      if (!template || template.tenantId !== session.tenantId) {
+        return res.status(404).json({ error: "Template not found" });
+      }
+
+      const whatsappAccount = template.tenant.whatsappAccount;
+
+      if (!whatsappAccount || !template.name) {
+         // If not submitted yet or no account
+         return res.status(200).json({ status: template.status });
+      }
+
+      // Sync with Meta
+      try {
+        const metaStatus = await metaAPI.getTemplateStatus({
+          businessAccountId: whatsappAccount.wabaId,
+          accessToken: whatsappAccount.accessToken,
+          templateName: template.name
+        });
+
+        const updated = await prisma.template.update({
+          where: { id: template.id },
+          data: {
+            status: metaStatus.status,
+            // rejectionReason is not in schema, ignoring it
+          },
+        });
+
+        return res.status(200).json({ 
+          status: updated.status,
+          // rejectionReason: updated.rejectionReason 
+        });
+
+      } catch (error) {
+        console.error("Meta sync error", error);
+        return res.status(200).json({ status: template.status, error: "Sync failed" });
+      }
     }
+
+    return res.status(405).json({ error: "Method not allowed" });
   } catch (error: any) {
-    console.error("Template status API error:", error);
     return res.status(error.message === "Unauthorized" ? 401 : 500).json({ error: error.message });
   }
 }

@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const session = await requireAuth();
+    const session = await requireAuth(req);
 
     if (req.method === "GET") {
       const { status, assignedUserId, limit, offset } = req.query;
@@ -25,21 +25,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         where,
         include: {
           contact: true,
-          assignedUser: {
-            select: {
-              id: true,
-              name: true,
-              avatar: true,
-            },
-          },
+          assignedTo: true,
           messages: {
             orderBy: { createdAt: "desc" },
             take: 1,
           },
         },
         orderBy: { lastMessageAt: "desc" },
-        take: limit ? parseInt(limit as string) : 50,
-        skip: offset ? parseInt(offset as string) : 0,
+        take: Number(limit),
+        skip: Number(offset),
       });
 
       return res.status(200).json({ conversations });
