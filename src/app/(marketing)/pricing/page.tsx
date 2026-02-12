@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { CheckCircle, X } from 'lucide-react'
 import Link from 'next/link'
 
@@ -64,7 +65,7 @@ const pricingData = [
 ]
 
 export default function PricingPage() {
-  const [billingPeriod, setBillingPeriod] = ('monthly' as 'monthly' | 'yearly')
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
 
   return (
     <main className="py-20 md:py-32">
