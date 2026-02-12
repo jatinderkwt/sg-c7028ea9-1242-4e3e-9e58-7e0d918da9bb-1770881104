@@ -45,7 +45,7 @@ export class MetaAPIService {
   async sendMessage(params: SendMessageParams): Promise<{ messageId: string }> {
     const decryptedToken = decrypt(params.accessToken);
     
-    let body: any = {
+    const body: any = {
       messaging_product: "whatsapp",
       recipient_type: "individual",
       to: params.to,
