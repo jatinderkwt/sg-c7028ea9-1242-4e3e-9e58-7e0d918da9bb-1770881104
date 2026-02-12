@@ -676,7 +676,7 @@ export default function InstallerPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      {TIMEZONES.map((tz) => (
+                      {TIMEZONES.filter(tz => tz && tz.value && tz.label).map((tz) => (
                         <SelectItem key={tz.value} value={tz.value}>
                           {tz.label}
                         </SelectItem>
@@ -805,7 +805,7 @@ export default function InstallerPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="max-h-[300px]">
-                      {TIMEZONES.map((tz) => (
+                      {TIMEZONES.filter(tz => tz && tz.value && tz.label).map((tz) => (
                         <SelectItem key={tz.value} value={tz.value}>
                           {tz.label}
                         </SelectItem>
