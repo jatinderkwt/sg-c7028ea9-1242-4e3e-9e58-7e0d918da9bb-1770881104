@@ -126,20 +126,27 @@ export default function InstallerPage() {
     
     try {
       const response = await fetch("/api/installer/init-database", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }
+        method: "POST"
       });
-
+      
       const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data.details || data.error || "Database initialization failed");
+        // Show detailed error with instructions if available
+        if (data.instructions) {
+          const instructionsText = Array.isArray(data.instructions) 
+            ? data.instructions.join('\n') 
+            : data.instructions;
+          setError(`${data.error}\n\n${data.details}\n\nFIX:\n${instructionsText}\n\n${data.fix || ''}`);
+        } else {
+          setError(data.error || data.details || "Failed to initialize database");
+        }
+        return;
       }
-
+      
       setDbInitialized(true);
       setError(null);
     } catch (err: any) {
-      console.error("Database initialization error:", err);
       setError(err.message || "Failed to initialize database");
     } finally {
       setLoading(false);
@@ -390,68 +397,31 @@ export default function InstallerPage() {
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Error</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
+                  <AlertDescription className="whitespace-pre-wrap font-mono text-xs">
+                    {error}
+                  </AlertDescription>
                 </Alert>
               )}
-
+              
               {dbInitialized ? (
-                <Alert className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                <Alert className="bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800">
                   <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  <AlertTitle className="text-green-800 dark:text-green-200">Database Initialized</AlertTitle>
+                  <AlertTitle className="text-green-800 dark:text-green-200">Success</AlertTitle>
                   <AlertDescription className="text-green-700 dark:text-green-300">
-                    All database tables have been created successfully. Default roles, permissions, and subscription plans have been seeded.
+                    Database initialized successfully. All tables created and default data seeded.
                   </AlertDescription>
                 </Alert>
               ) : (
                 <div className="space-y-4">
-                  <Alert>
-                    <Database className="h-4 w-4" />
-                    <AlertTitle>Database Setup Required</AlertTitle>
-                    <AlertDescription>
-                      Click the button below to initialize the database. This will:
-                      <ul className="list-disc list-inside mt-2 space-y-1">
-                        <li>Generate Prisma Client</li>
-                        <li>Create all database tables using Prisma migrations</li>
-                        <li>Create system tenant for global data</li>
-                        <li>Seed default roles (Super Admin, Admin, Manager, Agent)</li>
-                        <li>Create 52+ permissions for Super Admin</li>
-                        <li>Set up 4 subscription plans (Free, Starter, Professional, Enterprise)</li>
-                      </ul>
-                    </AlertDescription>
-                  </Alert>
-
-                  <Button
-                    onClick={initializeDatabase}
-                    disabled={loading}
-                    className="w-full"
-                    size="lg"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Initializing Database...
-                      </>
-                    ) : (
-                      <>
-                        <Database className="mr-2 h-4 w-4" />
-                        Initialize Database
-                      </>
-                    )}
-                  </Button>
-
-                  {loading && (
-                    <Alert>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <AlertTitle>Please Wait</AlertTitle>
-                      <AlertDescription>
-                        Database initialization is in progress. This may take 1-2 minutes.
-                        <br />
-                        <span className="text-xs text-muted-foreground mt-2 block">
-                          Do not close this window or refresh the page.
-                        </span>
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                  <p className="text-sm text-muted-foreground">
+                    This will create all necessary database tables and seed default data including:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>System tenant for global data</li>
+                    <li>4 default roles (Super Admin, Admin, Manager, Agent)</li>
+                    <li>22 permissions across all resources</li>
+                    <li>4 subscription plans (Free, Starter, Professional, Enterprise)</li>
+                  </ul>
                 </div>
               )}
               
@@ -462,11 +432,11 @@ export default function InstallerPage() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setCurrentStep(1)} disabled={loading}>
+              <Button variant="outline" onClick={() => setCurrentStep(1)}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
-              <Button onClick={() => setCurrentStep(3)} disabled={!dbInitialized || loading}>
+              <Button onClick={() => setCurrentStep(3)}>
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
@@ -482,13 +452,6 @@ export default function InstallerPage() {
               <CardDescription>Set up your administrator account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name *</Label>

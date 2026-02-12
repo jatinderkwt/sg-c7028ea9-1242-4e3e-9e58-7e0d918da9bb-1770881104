@@ -210,8 +210,8 @@ npm install
 Update `.env.local`:
 
 ```env
-# Database
-DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
+# Database (CRITICAL: Must include ?schema=public)
+DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi?schema=public"
 
 # JWT Authentication
 JWT_SECRET="your-super-secure-jwt-secret-key-change-this"

@@ -1,29 +1,61 @@
 # 🚀 Dokploy Setup Guide - WhatsApp Business API Platform
 
-## Quick Start (5 Minutes)
+## ⚡ CRITICAL FIX FOR "no schema has been selected" ERROR
 
-### Step 1: Add Environment Variables in Dokploy
+### **The Problem**
+```
+ERROR: no schema has been selected to create in
+```
 
-Open your Dokploy dashboard and add these environment variables:
+### **The Solution**
+Add `?schema=public` to your DATABASE_URL in Dokploy!
+
+---
+
+## 🎯 Quick Fix (2 Minutes)
+
+### Step 1: Update DATABASE_URL in Dokploy
+
+**OLD (Incorrect):**
+```bash
+DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
+```
+
+**NEW (Correct):**
+```bash
+DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi?schema=public"
+```
+
+**How to Update:**
+1. Open your **Dokploy Dashboard**
+2. Select your WhatsApp project
+3. Go to **Settings** → **Environment Variables**
+4. Find `DATABASE_URL`
+5. Click **Edit**
+6. Add `?schema=public` to the end
+7. Click **Save**
+8. Click **Redeploy**
+
+---
+
+## 📋 Complete Environment Variables for Dokploy
+
+Copy and paste these into your Dokploy Environment Variables:
 
 ```bash
-# Generate these secrets first (run locally):
-# openssl rand -base64 32  → use for NEXTAUTH_SECRET
-# openssl rand -hex 32     → use for ENCRYPTION_KEY
+# Database (CRITICAL - Note the ?schema=public at the end!)
+DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi?schema=public"
 
-# Authentication & Security (REQUIRED)
-NEXTAUTH_SECRET="your-generated-secret-here"
+# Authentication & Security (Generate these first!)
+NEXTAUTH_SECRET="your-generated-32-char-secret-here"
 NEXTAUTH_URL="https://your-dokploy-domain.com"
-ENCRYPTION_KEY="your-generated-key-here"
+ENCRYPTION_KEY="your-generated-64-char-hex-key-here"
 
-# App Configuration (REQUIRED)
+# App Configuration
 NEXT_PUBLIC_APP_URL="https://your-dokploy-domain.com"
 NODE_ENV="production"
 
-# Database (REQUIRED - You already have this)
-DATABASE_URL="postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
-
-# WhatsApp (Optional - can configure later via UI)
+# WhatsApp (Optional - can configure later via installer UI)
 WHATSAPP_APP_ID=""
 WHATSAPP_APP_SECRET=""
 WHATSAPP_VERIFY_TOKEN=""
@@ -31,193 +63,234 @@ WHATSAPP_PHONE_NUMBER_ID=""
 WHATSAPP_ACCESS_TOKEN=""
 ```
 
-**Save** and **Redeploy** your application.
+### Generate Secure Secrets
+
+Run these commands **on your local machine** to generate the required secrets:
+
+```bash
+# Generate NEXTAUTH_SECRET (copy the output)
+openssl rand -base64 32
+
+# Generate ENCRYPTION_KEY (copy the output)
+openssl rand -hex 32
+```
 
 ---
 
-### Step 2: Access the Installer
+## ✅ What Happens After You Redeploy
 
-Visit: `https://your-dokploy-domain.com/installer`
+Once you update the DATABASE_URL and redeploy:
 
-You should now see **Step 1: System Environment Check** with all checks passing:
-- ✅ Node.js Version
-- ✅ Database Connection
-- ✅ Environment Variables
-- ✅ File Permissions
-- ✅ Storage Availability
+1. **System Check (Step 1)** will show all green:
+   - ✅ Node.js Version
+   - ✅ Database Connection
+   - ✅ Environment Variables
+   - ✅ File Permissions
+   - ✅ Storage Availability
 
-Click **"Continue Setup"**
+2. **Database Initialization (Step 2)** will work:
+   - Click "Initialize Database"
+   - System will create all tables using `prisma db push`
+   - Fallback to `prisma migrate deploy` if needed
+   - Seeds default data (roles, permissions, subscription plans)
 
----
-
-### Step 3: Initialize Database
-
-**Step 2: Database Initialization**
-
-When you click **"Initialize Database"**, the system will:
-
-1. ✅ **Generate Prisma Client** (TypeScript types for database)
-2. ✅ **Run Database Migration** (`prisma/migrations/20260212_init/migration.sql`)
-   - Creates 15 tables:
-     - Tenant
-     - User
-     - Role
-     - Permission
-     - WhatsAppAccount
-     - Contact
-     - Conversation
-     - Message
-     - Template
-     - Campaign
-     - Automation
-     - Deal
-     - Task
-     - Subscription
-     - SubscriptionPlan
-     - UsageLog
-     - AuditLog
-     - Theme
-
-3. ✅ **Seed Default Data**:
-   - **System Tenant** (for global data)
-   - **4 Default Roles**:
-     - Super Admin (52 permissions)
-     - Admin (35 permissions)
-     - Manager (20 permissions)
-     - Agent (10 permissions)
-   - **4 Subscription Plans**:
-     - Free ($0/month - 500 messages)
-     - Starter ($49/month - 5,000 messages)
-     - Professional ($149/month - 25,000 messages)
-     - Enterprise ($499/month - unlimited messages)
-
-**This process takes 1-2 minutes.** Do not close the window.
-
-After completion, you'll see:
-> ✅ Database Initialized
-> All database tables have been created successfully. Default roles, permissions, and subscription plans have been seeded.
-
-Click **"Continue"**
+3. **Continue through remaining steps (3-9)**
 
 ---
 
-### Step 4: Create Super Admin Account
+## 🚀 Complete Installation Wizard Steps
 
-**Step 3: Create Super Admin**
+### **Step 1: ✅ System Environment Check**
+All checks pass with green indicators
 
-Fill in your administrator details:
-- Full Name (e.g., "John Doe")
-- Email (e.g., "admin@yourcompany.com")
-- Password (minimum 8 characters)
-- Confirm Password
-- Timezone (e.g., "America/New_York")
-- Language (e.g., "English")
+### **Step 2: Database Initialization**
+- Creates all database tables
+- Seeds default roles, permissions, and subscription plans
+- One-click setup
 
-Click **"Create Admin"**
+### **Step 3: Super Admin Creation**
+- Full Name
+- Email
+- Password (min 8 characters)
+- Timezone & Language
 
----
-
-### Step 5: Configure Company Settings
-
-**Step 4: Company Setup**
-
-Enter your company information:
-- Company Name (e.g., "Acme Inc")
-- Website (e.g., "https://acme.com")
-- Email (e.g., "contact@acme.com")
-- Phone (e.g., "+1234567890")
-- Address (e.g., "123 Main St, New York, NY")
-- Country (e.g., "United States")
-- Currency (e.g., "USD - US Dollar")
-
-Click **"Continue"**
-
----
-
-### Step 6: SaaS Configuration
-
-**Step 5: SaaS Configuration**
-
-Configure multi-tenant settings:
-- **Enable SaaS Mode**: Toggle ON if you want multiple tenants
-- **Free Trial Duration**: 14 days (default)
-- **Default Plan**: Starter (recommended)
-
-Click **"Continue"**
-
----
-
-### Step 7: Email & Notifications (Optional)
-
-**Step 6: Email & Notifications**
-
-You can skip this step and configure SMTP later:
-- Click **"Skip"** to proceed
-
-Or configure now:
-- SMTP Host (e.g., "smtp.gmail.com")
-- SMTP Port (e.g., "587")
-- SMTP Username
-- SMTP Password (App Password)
-- Sender Email
-- Sender Name
-
----
-
-### Step 8: WhatsApp API Setup (Optional)
-
-**Step 7: WhatsApp API Setup**
-
-You can skip this step and add credentials later via the dashboard:
-- Click **"Skip"** to proceed
-
-Or configure now:
-- Meta App ID
-- Meta App Secret
-- Webhook Verify Token
-- Webhook URL (auto-populated)
-- System Access Token
-
-**To get these credentials:**
-1. Go to: https://developers.facebook.com
-2. Create a new app or use existing
-3. Add WhatsApp product
-4. Go to "API Setup" section
-5. Copy the credentials
-
----
-
-### Step 9: System Preferences
-
-**Step 8: System Preferences**
-
-Configure default system settings:
-- Default Theme: Light/Dark/System
-- Date Format: YYYY-MM-DD (recommended)
-- Time Format: 24 Hour (recommended)
-- Auto Logout: 30 minutes (default)
-- Max Upload Size: 10 MB (default)
-- Message Retention: 365 days (default)
-
-Click **"Complete Installation"**
-
----
-
-### Step 10: Installation Complete! 🎉
-
-**Step 9: Complete Installation**
-
-You'll see a summary of your configuration:
-- Admin Email
+### **Step 4: Company Setup**
 - Company Name
-- SaaS Mode Status
-- Free Trial Duration
+- Contact Information
+- Address & Country
+- Currency & Timezone
 
-Click **"Go to Login"**
+### **Step 5: SaaS Configuration**
+- Enable/Disable Multi-Tenant Mode
+- Free Trial Duration (default: 14 days)
+- Default Subscription Plan
+
+### **Step 6: Email & Notifications**
+- SMTP Settings (optional - can configure later)
+- Test Email Functionality
+
+### **Step 7: WhatsApp API Setup**
+- Meta App ID & Secret
+- Webhook Verify Token
+- System Access Token
+- Webhook URL Configuration
+
+### **Step 8: System Preferences**
+- Default Theme (Light/Dark)
+- Date & Time Format
+- Auto Logout Settings
+- File Upload Limits
+- Message Retention Policy
+
+### **Step 9: Complete Installation**
+- Review all settings
+- Lock installer
+- Create system backup
+- Redirect to login
 
 ---
 
-## Post-Installation
+## 🔍 Troubleshooting
+
+### Issue: "no schema has been selected" error
+
+**Solution:** Add `?schema=public` to DATABASE_URL (see above)
+
+---
+
+### Issue: Database initialization still fails after URL update
+
+**Check these:**
+
+1. **Redeploy completed successfully**
+   - Verify in Dokploy logs
+   - Wait for "Running" status
+
+2. **Environment variable saved correctly**
+   - No typos in `?schema=public`
+   - No extra spaces
+   - Proper URL encoding
+
+3. **Database accessible**
+   ```bash
+   # Test connection (from local machine)
+   psql "postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi?schema=public"
+   ```
+
+4. **PostgreSQL version supported**
+   - PostgreSQL 12+ required
+   - Check: `SELECT version();`
+
+---
+
+### Issue: Prisma generate fails
+
+**Solution:**
+- Usually means Prisma schema syntax error
+- Check `prisma/schema.prisma` for issues
+- Verify all models are properly defined
+
+---
+
+### Issue: Tables created but seeding fails
+
+**Check:**
+- Role creation error → Tenant must exist first
+- Permission creation error → Role must exist first
+- SubscriptionPlan error → Check field names match schema
+
+---
+
+## 📊 Database Schema Overview
+
+After initialization, you'll have **15 tables**:
+
+### **Core Tables**
+- ✅ Tenant - Multi-tenant isolation
+- ✅ User - System users
+- ✅ Role - Permission groups
+- ✅ Permission - Access control
+- ✅ SubscriptionPlan - Pricing tiers
+- ✅ Subscription - Active subscriptions
+
+### **WhatsApp Tables**
+- ✅ WhatsAppAccount - API credentials
+- ✅ Contact - Customer database
+- ✅ Conversation - Chat threads
+- ✅ Message - Individual messages
+- ✅ Template - Message templates
+
+### **CRM Tables**
+- ✅ Deal - Sales pipeline
+- ✅ Task - Follow-ups
+
+### **Automation Tables**
+- ✅ Automation - Workflow rules
+- ✅ Campaign - Broadcast campaigns
+
+### **System Tables**
+- ✅ UsageLog - Quota tracking
+- ✅ AuditLog - Security trail
+
+---
+
+## 🎯 What Gets Seeded
+
+### **1 System Tenant**
+- Name: "System"
+- Domain: "system.local"
+- For global data
+
+### **4 Default Roles**
+
+**Super Admin** (22 permissions):
+- Full system access
+- Tenant management
+- All features
+
+**Admin** (11 permissions):
+- Company administration
+- User management
+- Full messaging
+
+**Manager** (5 permissions):
+- Team oversight
+- Contact management
+- Campaign viewing
+
+**Agent** (3 permissions):
+- Customer conversations
+- Message sending
+- Contact viewing
+
+### **4 Subscription Plans**
+
+**Free** - $0/month:
+- 500 messages/month
+- 100 contacts
+- 1 WhatsApp account
+
+**Starter** - $49/month:
+- 5,000 messages/month
+- 1,000 contacts
+- 2 WhatsApp accounts
+- Campaigns
+
+**Professional** - $149/month:
+- 25,000 messages/month
+- 10,000 contacts
+- 5 WhatsApp accounts
+- Automation + CRM
+
+**Enterprise** - $499/month:
+- Unlimited everything
+- API access
+- White-label
+- Dedicated support
+
+---
+
+## 🚀 Post-Installation
 
 ### 1. Login to Your Platform
 
@@ -316,57 +389,7 @@ curl -X POST https://your-domain.com/api/campaigns \
 
 ---
 
-## Troubleshooting
-
-### Issue: Database initialization fails
-
-**Error:** "Invalid `prisma.subscriptionPlan.findFirst()` invocation: The table `public.SubscriptionPlan` does not exist"
-
-**Solution:**
-This is expected before initialization. Just click **"Initialize Database"** and wait for completion.
-
----
-
-### Issue: Environment variables not loading
-
-**Solution:**
-1. Verify variables are saved in Dokploy dashboard
-2. Click **"Redeploy"** (not just restart)
-3. Wait for deployment to complete
-4. Clear browser cache and refresh
-
----
-
-### Issue: Database connection fails
-
-**Error:** "Database connection failed"
-
-**Check:**
-1. DATABASE_URL is correct
-2. PostgreSQL is running and accessible
-3. Port 6543 is open
-4. Database "whatsappbizapi" exists
-
-**Test connection:**
-```bash
-psql "postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
-```
-
----
-
-### Issue: Webhook verification fails
-
-**Error:** "Webhook signature validation failed"
-
-**Solution:**
-1. Verify `WHATSAPP_APP_SECRET` matches Meta dashboard
-2. Check webhook URL is correct
-3. Ensure HTTPS is enabled
-4. Test with Meta's webhook tester
-
----
-
-## Security Checklist
+## 🔐 Security Checklist
 
 ✅ NEXTAUTH_SECRET is unique and never committed to git  
 ✅ ENCRYPTION_KEY is 64 characters (hex) and secure  
@@ -379,7 +402,7 @@ psql "postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
 
 ---
 
-## Performance Optimization
+## 📈 Performance Optimization
 
 1. **Database Indexing**: Already configured in schema
 2. **Redis Caching**: Add Redis for rate limiting (optional)
@@ -389,7 +412,7 @@ psql "postgresql://whatsapp:JoalcnpPuVQtqFnq@72.61.249.147:6543/whatsappbizapi"
 
 ---
 
-## Monitoring
+## 📊 Monitoring
 
 ### Health Check Endpoint
 
@@ -413,7 +436,7 @@ View logs in Dokploy dashboard:
 
 ---
 
-## Backup & Recovery
+## 💾 Backup & Recovery
 
 ### Manual Backup
 
@@ -435,7 +458,7 @@ Set up in Dokploy:
 
 ---
 
-## Support
+## 📞 Support
 
 - **Documentation**: https://your-domain.com/docs
 - **Getting Started**: https://your-domain.com/getting-started
@@ -444,7 +467,7 @@ Set up in Dokploy:
 
 ---
 
-## Summary
+## ✨ Summary
 
 You now have:
 
