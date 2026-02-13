@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import { Menu, X, LogOut, Settings, Users, BarChart3, MessageSquare } from 'lucide-react'
+import { Menu, X, LogOut, Settings, Users, LayoutDashboard, MessageSquare, Megaphone, GitBranch, CreditCard, FileText } from 'lucide-react'
 
 export default function DashboardLayout({
   children,
@@ -28,12 +28,13 @@ export default function DashboardLayout({
   }
 
   const navItems = [
-    { href: '/dashboard', icon: BarChart3, label: 'Dashboard', exact: true },
-    { href: '/dashboard/inbox', icon: MessageSquare, label: 'Inbox' },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
+    { href: '/dashboard/inbox', icon: MessageSquare, label: 'Team Inbox' },
     { href: '/dashboard/contacts', icon: Users, label: 'Contacts' },
-    { href: '/dashboard/automation', icon: BarChart3, label: 'Automation' },
-    { href: '/dashboard/campaigns', icon: MessageSquare, label: 'Campaigns' },
-    { href: '/dashboard/templates', icon: MessageSquare, label: 'Templates' },
+    { href: '/dashboard/campaigns', icon: Megaphone, label: 'Campaigns' },
+    { href: '/dashboard/automation', icon: GitBranch, label: 'Automation' },
+    { href: '/dashboard/templates', icon: FileText, label: 'Templates' },
+    { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Usage' },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ]
 
@@ -98,8 +99,14 @@ export default function DashboardLayout({
           </button>
 
           <div className="ml-auto flex items-center gap-4">
+            {session?.user?.impersonatorId && (
+              <div className="flex items-center gap-2 bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium border border-amber-200">
+                <span>Viewing as {session.user.name}</span>
+                <button onClick={() => signOut({ callbackUrl: '/admin' })} className="ml-2 hover:underline font-bold">Exit</button>
+              </div>
+            )}
             <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-              A
+              {session?.user?.name?.charAt(0) || 'U'}
             </div>
           </div>
         </div>

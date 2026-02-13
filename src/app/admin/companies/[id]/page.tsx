@@ -1,6 +1,5 @@
 import { db } from "@/lib/db"
 import { notFound, redirect } from "next/navigation"
-import { UserRole } from "@prisma/client"
 import { revalidatePath } from "next/cache"
 
 async function updateCompany(formData: FormData) {
@@ -18,7 +17,9 @@ async function updateCompany(formData: FormData) {
     revalidatePath("/admin/companies")
 }
 
-export default async function CompanyDetailsPage({ params }: { params: { id: string } }) {
+export default async function CompanyDetailsPage(props: { params: Promise<{ id: string }> }) {
+    const session = await getServerSession(authOptions)
+    const params = await props.params;
     const workspace = await db.workspace.findUnique({
         where: { id: params.id },
         include: {
@@ -101,6 +102,7 @@ export default async function CompanyDetailsPage({ params }: { params: { id: str
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -110,6 +112,9 @@ export default async function CompanyDetailsPage({ params }: { params: { id: str
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.user.email}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.role}</td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(member.joinedAt).toLocaleDateString()}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <ImpersonateButton adminId={session?.user?.id || ''} targetUserId={member.userId} />
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -118,3 +123,7 @@ export default async function CompanyDetailsPage({ params }: { params: { id: str
         </div>
     )
 }
+
+import { ImpersonateButton } from "@/components/admin/impersonate-button"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"

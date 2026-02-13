@@ -91,6 +91,8 @@ model Workspace {
   templates         WhatsAppTemplate[]
   analyticsData     AnalyticsData[]
   settings          WorkspaceSettings?
+  compliance        Compliance?
+  ledger            Ledger?
 
   @@index([slug])
 }
@@ -562,4 +564,137 @@ model WebhookLog {
 
   @@index([event])
   @@index([createdAt])
+}
+
+// ===== COMPLIANCE & KYB =====
+
+model Compliance {
+  id                 String             @id @default(cuid())
+  workspaceId        String             @unique
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  status             ComplianceStatus   @default(PENDING)
+  legalName          String?
+  registrationNumber String?
+  taxId              String?
+  address            String?
+  city               String?
+  country            String? // ISO 3166-1 alpha-2
+  website            String?
+  reviewedBy         String? // User ID of admin
+  reviewedAt         DateTime?
+  rejectionReason    String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  documents          ComplianceDocument[]
+
+  @@index([status])
+}
+
+enum ComplianceStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_INFO
+}
+
+model ComplianceDocument {
+  id            String         @id @default(cuid())
+  complianceId  String
+  compliance    Compliance     @relation(fields: [complianceId], references: [id], onDelete: Cascade)
+  type          String // "business_license", "utility_bill", "tax_document", "id_proof"
+  url           String // Secured URL
+  encryptionKey String? // If encrypted at rest
+  status        DocumentStatus @default(PENDING)
+  mimeType      String?
+  fileSize      Int?
+  uploadedAt    DateTime       @default(now())
+  reviewedBy    String?
+  reviewedAt    DateTime?
+
+  @@index([complianceId])
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ===== GOVERNANCE & AUDIT =====
+
+model SystemAudit {
+  id        String   @id @default(cuid())
+  action    String // "user.impersonate", "billing.credit_add", "settings.update"
+  actorId   String // User ID who performed action
+  actorName String? // Snapshot of name
+  targetId  String? // ID of affected entity (User, Workspace, etc)
+  details   Json? // Diff or metadata
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ===== BILLING & LEDGERS =====
+
+model Ledger {
+  id           String        @id @default(cuid())
+  workspaceId  String        @unique
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  balance      Int           @default(0) // in cents
+  currency     String        @default("USD")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String            @id @default(cuid())
+  ledgerId    String
+  ledger      Ledger            @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
+  amount      Int // positive for credit, negative for debit
+  type        TransactionType
+  status      TransactionStatus @default(COMPLETED)
+  referenceId String? // external ID (e.g. Stripe Charge ID, Conversation ID)
+  description String?
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+
+  @@index([ledgerId])
+  @@index([type])
+}
+
+enum TransactionType {
+  DEPOSIT
+  USAGE_MARKETING
+  USAGE_UTILITY
+  USAGE_SERVICE
+  USAGE_AUTH
+  PLATFORM_FEE
+  REFUND
+  ADJUSTMENT
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ===== CMS & CONTENT =====
+
+model CmsContent {
+  id          String   @id @default(cuid())
+  key         String   @unique // e.g., "landing_hero", "pricing_faq"
+  type        String // "text", "html", "json", "image"
+  content     String // The actual content
+  metadata    Json?
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
