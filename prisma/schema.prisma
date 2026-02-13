@@ -249,6 +249,7 @@ model Message {
   mediaType       String?   // "image", "video", "audio", "document"
   sender          MessageSender
   deliveryStatus  DeliveryStatus @default(SENT)
+  metaMessageId   String?   @unique
   isRead          Boolean   @default(false)
   readAt          DateTime?
   createdAt       DateTime  @default(now())
