@@ -57,8 +57,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                     </Link>
 
                     <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-4 mb-2 mt-6">
-                        Platform
+                        Platform Management
                     </div>
+                    <Link href="/admin/cms" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <Activity size={18} className="group-hover:text-blue-400" />
+                        Website CMS
+                    </Link>
+                    <Link href="/admin/plans" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
+                        <CreditCard size={18} className="group-hover:text-blue-400" />
+                        Subscription Plans
+                    </Link>
                     <Link href="/admin/developers" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition group">
                         <Activity size={18} className="group-hover:text-blue-400" />
                         Dev Tools

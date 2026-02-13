@@ -1,145 +1,179 @@
 import Link from 'next/link'
 import { CheckCircle, MessageSquare, Zap, BarChart3, Users, Lock } from 'lucide-react'
-import { getLandingHero } from "@/lib/cms"
+import {
+  getLandingHeroHeadline,
+  getLandingHeroSubheadline,
+  getLandingHeroCtaText,
+  getLandingFeaturesTitle,
+  getLandingFeaturesSub,
+  getLandingFooterCtaHeadline,
+  getLandingFeaturesJson,
+  getLandingSolutionsJson,
+  getLandingBannerText,
+  getLandingBannerLink,
+  isLandingBannerActive,
+  getLandingHeroSlides
+} from "@/lib/cms"
+import { db } from "@/lib/db"
+import { ArrowRight } from 'lucide-react'
+import { HeroSlider } from '@/components/marketing/hero-slider'
 
-const features = [
+const iconMap: Record<string, any> = {
+  MessageSquare, Zap, Users, BarChart3, Lock
+}
+
+const defaultSlides = [
   {
-    icon: MessageSquare,
+    image: 'https://images.unsplash.com/photo-1573164713988-8665fc963095?q=80&w=2069&auto=format&fit=crop',
+    title: 'WhatsApp Business Made Simple',
+    sub: 'Manage customer conversations, automate responses, and grow your business with our all-in-one platform.',
+    cta: 'Start Free Trial',
+    link: '/register'
+  },
+  {
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop',
+    title: 'Scale Your Team Productivity',
+    sub: 'Empower your sales and support agents with a unified shared inbox and collaborative tools.',
+    cta: 'View Pricing',
+    link: '/pricing'
+  }
+]
+
+const defaultFeatures = [
+  {
+    icon: 'MessageSquare',
     title: 'Shared Inbox',
     description: 'Manage all WhatsApp conversations in one unified inbox with multi-agent support',
   },
   {
-    icon: Zap,
+    icon: 'Zap',
     title: 'Smart Automation',
     description: 'Create automated workflows with keyword triggers and intelligent routing',
   },
   {
-    icon: Users,
+    icon: 'Users',
     title: 'CRM Integration',
     description: 'Full customer relationship management with contact history and analytics',
   },
   {
-    icon: BarChart3,
+    icon: 'BarChart3',
     title: 'Advanced Analytics',
     description: 'Real-time dashboards showing response times, resolution rates, and more',
   },
   {
-    icon: Zap,
+    icon: 'Zap',
     title: 'Broadcast Campaigns',
     description: 'Send templated messages to thousands of customers instantly',
   },
   {
-    icon: Lock,
+    icon: 'Lock',
     title: 'Enterprise Security',
     description: 'Bank-level encryption and compliance with global data protection standards',
   },
 ]
 
-const plans = [
+const defaultSolutions = [
   {
-    name: 'Starter',
-    price: '$29',
-    period: '/month',
-    description: 'Perfect for getting started',
-    features: [
-      '1 WhatsApp number',
-      '2 agents',
-      '1,000 contacts',
-      'Basic automation',
-      'Email support',
-    ],
-    cta: 'Start Free Trial',
-    featured: false,
+    title: 'E-Commerce',
+    description: 'Order updates, shipping notifications, and customer support',
+    icon: '🛍️',
   },
   {
-    name: 'Growth',
-    price: '$99',
-    period: '/month',
-    description: 'For growing teams',
-    features: [
-      '3 WhatsApp numbers',
-      '5 agents',
-      '10,000 contacts',
-      'Full automation',
-      'CRM system',
-      'Priority support',
-      'Custom templates',
-    ],
-    cta: 'Start Free Trial',
-    featured: true,
+    title: 'Healthcare',
+    description: 'Appointment reminders, prescription updates, and patient communication',
+    icon: '⚕️',
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: '',
-    description: 'For large organizations',
-    features: [
-      'Unlimited numbers',
-      'Unlimited agents',
-      'Unlimited contacts',
-      'Advanced automation',
-      'White label options',
-      'Dedicated support',
-      'Custom integrations',
-      'SLA guarantee',
-    ],
-    cta: 'Contact Sales',
-    featured: false,
+    title: 'Education',
+    description: 'Student announcements, course updates, and academic support',
+    icon: '📚',
+  },
+  {
+    title: 'Real Estate',
+    description: 'Property listings, appointment scheduling, and client updates',
+    icon: '🏠',
+  },
+  {
+    title: 'Travel & Hospitality',
+    description: 'Booking confirmations, itinerary updates, and guest support',
+    icon: '✈️',
+  },
+  {
+    title: 'Customer Support',
+    description: 'Instant support, ticket tracking, and issue resolution',
+    icon: '🎧',
   },
 ]
 
 export default async function Home() {
-  const heroContent = await getLandingHero()
+  const [
+    headline,
+    subheadline,
+    ctaText,
+    featuresTitle,
+    featuresSub,
+    footerCtaHeadline,
+    dynamicFeatures,
+    dynamicSolutions,
+    dbPlans,
+    bannerText,
+    bannerLink,
+    bannerActive,
+    heroSlides
+  ] = await Promise.all([
+    getLandingHeroHeadline(),
+    getLandingHeroSubheadline(),
+    getLandingHeroCtaText(),
+    getLandingFeaturesTitle(),
+    getLandingFeaturesSub(),
+    getLandingFooterCtaHeadline(),
+    getLandingFeaturesJson(defaultFeatures),
+    getLandingSolutionsJson(defaultSolutions),
+    db.plan.findMany({ where: { isActive: true }, orderBy: { displayOrder: 'asc' } }),
+    getLandingBannerText(),
+    getLandingBannerLink(),
+    isLandingBannerActive(),
+    getLandingHeroSlides(defaultSlides)
+  ])
 
   return (
     <main>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20 md:py-32">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              {heroContent.headline}
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              {heroContent.subheadline}
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Link
-                href={heroContent.ctaLink || "/register"}
-                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105"
-              >
-                {heroContent.ctaText}
-              </Link>
-              <Link
-                href={heroContent.secondaryCtaLink || "#features"}
-                className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
-              >
-                {heroContent.secondaryCtaText || "Learn More"}
-              </Link>
-            </div>
-            <p className="text-sm text-gray-500 mt-6">No credit card required • 14-day free trial</p>
-          </div>
+      {/* Announcement Banner */}
+      {bannerActive && bannerText && (
+        <div className="bg-blue-600 text-white py-3 px-4 text-center relative z-20 overflow-hidden group">
+          <Link href={bannerLink} className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest hover:underline transition">
+            <span className="relative">
+              {bannerText}
+            </span>
+            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+          </Link>
+          <div className="absolute top-0 left-0 w-full h-full bg-white/10 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 skew-x-12"></div>
         </div>
-      </section>
+      )}
+
+      {/* Hero Slider Section */}
+      <HeroSlider slides={heroSlides} />
 
       {/* Features Section */}
       <section id="features" className="py-20 md:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Everything you need to manage WhatsApp business communications at scale
+          <div className="text-center mb-16 px-4">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">{featuresTitle}</h2>
+            <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+              {featuresSub}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4">
+            {dynamicFeatures.map((feature, index) => {
+              const Icon = iconMap[feature.icon] || Zap
               return (
-                <div key={index} className="p-8 bg-gray-50 rounded-lg hover:shadow-lg transition">
-                  <Icon className="w-12 h-12 text-blue-600 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                  <p className="text-gray-600">{feature.description}</p>
+                <div key={index} className="p-8 bg-white border border-gray-100 rounded-3xl hover:shadow-xl transition-all duration-300 group">
+                  <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                    <Icon className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
                 </div>
               )
             })}
@@ -148,50 +182,19 @@ export default async function Home() {
       </section>
 
       {/* Solutions Section */}
-      <section className="py-20 md:py-32 bg-gray-50">
+      <section className="py-20 md:py-32 bg-gray-50/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Built for Every Industry</h2>
-            <p className="text-xl text-gray-600">Trusted by businesses across different sectors</p>
+          <div className="text-center mb-16 px-4">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Built for Every Industry</h2>
+            <p className="text-xl text-gray-500 font-medium">Trusted by businesses across different sectors globally</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'E-Commerce',
-                description: 'Order updates, shipping notifications, and customer support',
-                icon: '🛍️',
-              },
-              {
-                title: 'Healthcare',
-                description: 'Appointment reminders, prescription updates, and patient communication',
-                icon: '⚕️',
-              },
-              {
-                title: 'Education',
-                description: 'Student announcements, course updates, and academic support',
-                icon: '📚',
-              },
-              {
-                title: 'Real Estate',
-                description: 'Property listings, appointment scheduling, and client updates',
-                icon: '🏠',
-              },
-              {
-                title: 'Travel & Hospitality',
-                description: 'Booking confirmations, itinerary updates, and guest support',
-                icon: '✈️',
-              },
-              {
-                title: 'Customer Support',
-                description: 'Instant support, ticket tracking, and issue resolution',
-                icon: '🎧',
-              },
-            ].map((solution, index) => (
-              <div key={index} className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition">
-                <div className="text-4xl mb-4">{solution.icon}</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{solution.title}</h3>
-                <p className="text-gray-600">{solution.description}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 px-4">
+            {dynamicSolutions.map((solution, index) => (
+              <div key={index} className="bg-white p-8 rounded-3xl shadow-sm border border-white hover:border-blue-100 hover:shadow-lg transition-all duration-300">
+                <div className="text-5xl mb-6">{solution.icon}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{solution.title}</h3>
+                <p className="text-gray-600 leading-relaxed">{solution.description}</p>
               </div>
             ))}
           </div>
@@ -199,50 +202,50 @@ export default async function Home() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 md:py-32 bg-white">
+      <section id="pricing" className="py-20 md:py-32 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-600">Choose the perfect plan for your business</p>
+          <div className="text-center mb-16 px-4">
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Simple, Growth-Focused Pricing</h2>
+            <p className="text-xl text-gray-500 font-medium">Transparent billing, no hidden fees, cancel anytime.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {plans.map((plan, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-4 items-center">
+            {dbPlans.map((plan, index) => (
               <div
                 key={index}
-                className={`rounded-lg overflow-hidden transition transform hover:scale-105 ${plan.featured
-                  ? 'ring-2 ring-blue-600 shadow-2xl md:scale-105'
-                  : 'bg-gray-50 shadow-md'
+                className={`rounded-[2rem] overflow-hidden transition-all duration-500 ${plan.isFeatured
+                  ? 'ring-4 ring-blue-500 shadow-[0_30px_60px_-15px_rgba(59,130,246,0.3)] md:scale-105 z-10'
+                  : 'bg-gray-50/50 border border-gray-100'
                   }`}
               >
-                <div className={`p-8 ${plan.featured ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' : ''}`}>
-                  <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                  <p className={plan.featured ? 'text-blue-100' : 'text-gray-600'}>{plan.description}</p>
+                <div className={`p-10 ${plan.isFeatured ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white' : ''}`}>
+                  <h3 className="text-2xl font-black mb-2 uppercase tracking-tight">{plan.name}</h3>
+                  <p className={`text-sm font-medium ${plan.isFeatured ? 'text-blue-100' : 'text-gray-500'}`}>{plan.description}</p>
                 </div>
 
-                <div className={`px-8 py-8 ${plan.featured ? 'bg-blue-50' : ''}`}>
-                  <div className="mb-8">
-                    <span className={`text-5xl font-bold ${plan.featured ? 'text-blue-600' : 'text-gray-900'}`}>
-                      {plan.price}
+                <div className={`px-10 py-10 ${plan.isFeatured ? 'bg-white' : ''}`}>
+                  <div className="mb-10 flex items-baseline gap-1">
+                    <span className={`text-6xl font-black tracking-tighter ${plan.isFeatured ? 'text-blue-600' : 'text-gray-900'}`}>
+                      ${plan.pricingMonthly}
                     </span>
-                    <span className="text-gray-600 ml-2">{plan.period}</span>
+                    <span className="text-gray-400 font-bold">/mo</span>
                   </div>
 
-                  <button
-                    className={`w-full py-3 rounded-lg font-semibold transition mb-8 ${plan.featured
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
+                  <Link
+                    href={`/register?plan=${plan.id}`}
+                    className={`block w-full py-4 rounded-2xl font-black text-center transition-all mb-10 ${plan.isFeatured
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-200'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
                       }`}
                   >
-                    {plan.cta}
-                  </button>
+                    Get Started
+                  </Link>
 
                   <ul className="space-y-4">
-                    {plan.features.map((feature, idx) => (
+                    {plan.features.map((feature: string, idx: number) => (
                       <li key={idx} className="flex items-start gap-3">
-                        <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.featured ? 'text-blue-600' : 'text-green-600'
-                          }`} />
-                        <span className={plan.featured ? 'text-gray-700' : 'text-gray-600'}>
+                        <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.isFeatured ? 'text-blue-600' : 'text-emerald-500'}`} />
+                        <span className={`text-sm font-bold ${plan.isFeatured ? 'text-gray-800' : 'text-gray-600'}`}>
                           {feature}
                         </span>
                       </li>
@@ -256,18 +259,28 @@ export default async function Home() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-r from-blue-600 to-blue-700">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Transform Your Business?</h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Join thousands of businesses using WaFiz to communicate with their customers
+      <section className="py-20 md:py-40 bg-gray-900 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/10 blur-[120px] rounded-full -mr-20"></div>
+        <div className="absolute bottom-0 left-0 w-1/4 h-full bg-emerald-600/10 blur-[120px] rounded-full -ml-20"></div>
+
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white relative z-10">
+          <h2 className="text-4xl md:text-6xl font-black mb-8 leading-tight tracking-tight">
+            {footerCtaHeadline}
+          </h2>
+          <p className="text-xl text-gray-400 mb-12 font-medium">
+            Join 2,500+ forward-thinking businesses using WaFiz to dominate customer communication.
           </p>
           <Link
-            href="/auth/register"
-            className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105"
+            href="/register"
+            className="inline-block px-12 py-5 bg-blue-600 text-white rounded-2xl font-black text-lg hover:bg-blue-700 hover:shadow-2xl shadow-blue-900/40 transition transform hover:-translate-y-1"
           >
-            Start Your Free Trial Today
+            Start Your Free Trial Now
           </Link>
+          <div className="mt-10 flex items-center justify-center gap-8 opacity-30">
+            <div className="flex items-center gap-2"><CheckCircle size={16} /> <span className="text-xs font-bold uppercase tracking-widest">ISO Certified</span></div>
+            <div className="flex items-center gap-2"><CheckCircle size={16} /> <span className="text-xs font-bold uppercase tracking-widest">GDPR Ready</span></div>
+            <div className="flex items-center gap-2"><CheckCircle size={16} /> <span className="text-xs font-bold uppercase tracking-widest">99.9% Uptime</span></div>
+          </div>
         </div>
       </section>
     </main>

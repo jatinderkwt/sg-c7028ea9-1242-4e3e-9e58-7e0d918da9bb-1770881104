@@ -1,221 +1,128 @@
-'use client'
-
-import { useState } from 'react'
-import { CheckCircle, X } from 'lucide-react'
+import { db } from "@/lib/db"
+import { CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
-const pricingData = [
-  {
-    name: 'Starter',
-    price: 29.99,
-    yearlyPrice: 299.90,
-    description: 'Perfect for getting started',
-    highlighted: false,
-    features: [
-      { name: '1 WhatsApp Number', included: true },
-      { name: '2 Agents', included: true },
-      { name: '1,000 Contacts', included: true },
-      { name: 'Basic Automation', included: true },
-      { name: 'Shared Inbox', included: true },
-      { name: 'Basic Analytics', included: true },
-      { name: 'Email Support', included: true },
-      { name: 'CRM Integration', included: false },
-      { name: 'Advanced Automation', included: false },
-      { name: 'Custom Templates', included: false },
-    ],
-  },
-  {
-    name: 'Growth',
-    price: 99.99,
-    yearlyPrice: 999.90,
-    description: 'For growing teams',
-    highlighted: true,
-    features: [
-      { name: '3 WhatsApp Numbers', included: true },
-      { name: '5 Agents', included: true },
-      { name: '10,000 Contacts', included: true },
-      { name: 'Full Automation', included: true },
-      { name: 'Shared Inbox', included: true },
-      { name: 'Advanced Analytics', included: true },
-      { name: 'Priority Support', included: true },
-      { name: 'CRM Integration', included: true },
-      { name: 'Advanced Automation', included: true },
-      { name: 'Custom Templates', included: true },
-    ],
-  },
-  {
-    name: 'Enterprise',
-    price: null,
-    yearlyPrice: null,
-    description: 'For large organizations',
-    highlighted: false,
-    features: [
-      { name: 'Unlimited Numbers', included: true },
-      { name: 'Unlimited Agents', included: true },
-      { name: 'Unlimited Contacts', included: true },
-      { name: 'Advanced Automation', included: true },
-      { name: 'Shared Inbox', included: true },
-      { name: 'Analytics Suite', included: true },
-      { name: 'Dedicated Support', included: true },
-      { name: 'CRM Integration', included: true },
-      { name: 'White Label', included: true },
-      { name: 'Custom Integrations', included: true },
-    ],
-  },
-]
-
-export default function PricingPage() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+export default async function PricingPage() {
+  const plans = await db.plan.findMany({
+    where: { isActive: true },
+    orderBy: { displayOrder: 'asc' }
+  })
 
   return (
-    <main className="py-20 md:py-32">
+    <main className="py-20 md:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4">Pricing Plans</h1>
-          <p className="text-xl text-gray-600 mb-8">Choose the perfect plan for your business</p>
-
-          {/* Billing Toggle */}
-          <div className="inline-flex bg-gray-200 rounded-lg p-1">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-4 py-2 rounded transition ${
-                billingPeriod === 'monthly'
-                  ? 'bg-white text-blue-600 shadow'
-                  : 'text-gray-600'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingPeriod('yearly')}
-              className={`px-4 py-2 rounded transition ${
-                billingPeriod === 'yearly'
-                  ? 'bg-white text-blue-600 shadow'
-                  : 'text-gray-600'
-              }`}
-            >
-              Yearly <span className="text-green-600 text-xs ml-1">(Save 20%)</span>
-            </button>
-          </div>
+          <h1 className="text-6xl font-black text-gray-900 mb-6 tracking-tight">Investment Tiers</h1>
+          <p className="text-xl text-gray-500 max-w-2xl mx-auto font-medium">
+            Scale your WhatsApp communications with precision. No hidden fees, ever.
+          </p>
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {pricingData.map((plan, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 mb-20 px-4">
+          {plans.map((plan, index) => (
             <div
               key={index}
-              className={`rounded-lg overflow-hidden transition transform ${
-                plan.highlighted
-                  ? 'ring-2 ring-blue-600 shadow-2xl md:scale-105'
-                  : 'shadow-lg'
-              }`}
+              className={`rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 ${plan.isFeatured
+                  ? 'ring-4 ring-blue-500 shadow-[0_40px_80px_-15px_rgba(59,130,246,0.25)] md:scale-110 z-10'
+                  : 'bg-gray-50/50 border border-gray-100 shadow-sm'
+                }`}
             >
               <div
-                className={`p-8 ${
-                  plan.highlighted
-                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
-                    : 'bg-gray-50'
-                }`}
-              >
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p
-                  className={`mb-6 ${
-                    plan.highlighted ? 'text-blue-100' : 'text-gray-600'
+                className={`p-10 ${plan.isFeatured
+                    ? 'bg-gradient-to-br from-blue-600 to-blue-800 text-white'
+                    : ''
                   }`}
-                >
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-2xl font-black uppercase tracking-tight">{plan.name}</h3>
+                  {plan.isFeatured && (
+                    <span className="bg-white/20 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-white/30 backdrop-blur-sm">Most Popular</span>
+                  )}
+                </div>
+                <p className={`text-sm font-medium ${plan.isFeatured ? 'text-blue-100' : 'text-gray-500'}`}>
                   {plan.description}
                 </p>
-
-                {plan.price ? (
-                  <div className="mb-6">
-                    <span className="text-5xl font-bold">
-                      ${billingPeriod === 'monthly' ? plan.price.toFixed(2) : (plan.yearlyPrice! / 12).toFixed(2)}
-                    </span>
-                    <span className={`ml-2 ${
-                      plan.highlighted ? 'text-blue-100' : 'text-gray-600'
-                    }`}>
-                      /month{billingPeriod === 'yearly' ? ' billed yearly' : ''}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="mb-6">
-                    <span className="text-3xl font-bold">Custom Pricing</span>
-                  </div>
-                )}
-
-                <Link
-                  href="/auth/register"
-                  className={`block w-full py-3 rounded-lg font-semibold transition text-center ${
-                    plan.highlighted
-                      ? 'bg-white text-blue-600 hover:shadow-lg'
-                      : 'bg-blue-600 text-white hover:bg-blue-700'
-                  }`}
-                >
-                  Get Started
-                </Link>
               </div>
 
-              {/* Features */}
-              <div className="p-8">
-                <ul className="space-y-4">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      {feature.included ? (
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <X className="w-5 h-5 text-gray-300 flex-shrink-0 mt-0.5" />
-                      )}
-                      <span
-                        className={
-                          feature.included
-                            ? 'text-gray-900'
-                            : 'text-gray-400'
-                        }
-                      >
-                        {feature.name}
-                      </span>
+              <div className={`p-10 ${plan.isFeatured ? 'bg-white' : ''}`}>
+                <div className="mb-10">
+                  <div className="flex items-baseline gap-1">
+                    <span className={`text-6xl font-black tracking-tighter ${plan.isFeatured ? 'text-blue-600' : 'text-gray-900'}`}>
+                      ${plan.pricingMonthly}
+                    </span>
+                    <span className="text-gray-400 font-bold">/mo</span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 font-bold uppercase mt-2 tracking-widest">Billed Monthly</p>
+                </div>
+
+                <Link
+                  href={`/register?plan=${plan.id}`}
+                  className={`block w-full py-5 rounded-2xl font-black text-center transition-all mb-10 shadow-lg ${plan.isFeatured
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-200'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
+                >
+                  Join the Program
+                </Link>
+
+                <div className="space-y-6">
+                  <div className="pt-6 border-t border-gray-100 italic text-[11px] text-gray-400 font-medium">Included in this plan:</div>
+                  <ul className="space-y-4">
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className={`w-5 h-5 ${plan.isFeatured ? 'text-blue-600' : 'text-emerald-500'}`} />
+                      <span className="text-sm font-bold text-gray-700">{plan.maxNumbers} Phone Number ID(s)</span>
                     </li>
-                  ))}
-                </ul>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className={`w-5 h-5 ${plan.isFeatured ? 'text-blue-600' : 'text-emerald-500'}`} />
+                      <span className="text-sm font-bold text-gray-700">{plan.maxAgents} Team Agents</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className={`w-5 h-5 ${plan.isFeatured ? 'text-blue-600' : 'text-emerald-500'}`} />
+                      <span className="text-sm font-bold text-gray-700">{plan.maxContacts.toLocaleString()} Contact Capacity</span>
+                    </li>
+                    {plan.features.map((feature: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-3">
+                        <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.isFeatured ? 'text-blue-600' : 'text-emerald-500'}`} />
+                        <span className={`text-sm font-bold ${plan.isFeatured ? 'text-gray-900' : 'text-gray-600'}`}>
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* FAQ */}
-        <div className="bg-gray-50 rounded-lg p-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">Frequently Asked Questions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-gray-900 rounded-[3rem] p-12 md:p-20 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-blue-600/10 blur-[100px] rounded-full"></div>
+          <h2 className="text-4xl font-black mb-12 text-center tracking-tight">Intelligence Briefing (FAQ)</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-10 relative z-10">
             {[
               {
-                q: 'Do all plans include 24/7 support?',
-                a: 'Starter includes email support with 24-hour response time. Growth and Enterprise include priority support with faster response times.',
+                q: 'What is the commitment period?',
+                a: 'All plans are month-to-month by default. You can cancel your subscription at the end of any billing period without further obligation.',
               },
               {
-                q: 'Can I change my plan anytime?',
-                a: 'Yes, you can upgrade or downgrade your plan anytime. Changes take effect on your next billing cycle.',
+                q: 'Can I upgrade my agent count mid-month?',
+                a: 'Yes, scaling happens instantly. Pro-rated adjustments will be applied to your next automated ledger update.',
               },
               {
-                q: 'Is there a setup fee?',
-                a: 'No, there are no setup fees. You only pay for your chosen plan.',
-              },
-              {
-                q: 'What payment methods do you accept?',
-                a: 'We accept all major credit cards, bank transfers, and digital payment methods through Stripe.',
+                q: 'Is my data isolated?',
+                a: 'Absolutely. We use strict multi-tenant isolation protocols at the database level and AES-256 bit encryption for all stored identifiers.',
               },
               {
                 q: 'Is there a free trial?',
-                a: 'Yes, all plans come with a 14-day free trial. No credit card required to start.',
-              },
-              {
-                q: 'Can I cancel anytime?',
-                a: 'Yes, you can cancel your subscription anytime. No questions asked.',
-              },
+                a: 'Yes, all new registrations start with a 14-day premium trial to test full platform capabilities before any charge.',
+              }
             ].map((item, idx) => (
-              <div key={idx}>
-                <h3 className="font-semibold text-gray-900 mb-2">{item.q}</h3>
-                <p className="text-gray-600">{item.a}</p>
+              <div key={idx} className="border-l-2 border-blue-500 pl-6">
+                <h3 className="text-lg font-black mb-3 text-blue-100 uppercase tracking-tighter">{item.q}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed font-medium">{item.a}</p>
               </div>
             ))}
           </div>
