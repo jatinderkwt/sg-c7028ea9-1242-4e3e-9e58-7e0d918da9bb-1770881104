@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import crypto from "crypto";
 
 // GET request for Verification
-export async function GET(req: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function GET(
+    req: NextRequest,
+    { params }: { params: Promise<{ workspaceId: string }> }
+) {
+    const { workspaceId } = await params;
     const searchParams = req.nextUrl.searchParams;
     const mode = searchParams.get("hub.mode");
     const token = searchParams.get("hub.verify_token");
@@ -12,7 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { workspaceId:
     if (mode === "subscribe" && token) {
         // Fetch the WhatsApp number settings for this workspace
         const waSettings = await db.whatsAppNumber.findFirst({
-            where: { workspaceId: params.workspaceId }
+            where: { workspaceId }
         });
 
         if (waSettings && waSettings.webhookToken === token) {
@@ -28,8 +31,12 @@ export async function GET(req: NextRequest, { params }: { params: { workspaceId:
 }
 
 // POST request for Event Notifications
-export async function POST(req: NextRequest, { params }: { params: { workspaceId: string } }) {
+export async function POST(
+    req: NextRequest,
+    { params }: { params: Promise<{ workspaceId: string }> }
+) {
     try {
+        const { workspaceId } = await params;
         const body = await req.json();
 
         // Optional: Implement signature verification if appSecret is stored
@@ -37,7 +44,7 @@ export async function POST(req: NextRequest, { params }: { params: { workspaceId
         // ... verify signature logic using waSettings.appSecret ...
 
         // Log the incoming event
-        console.log(`Received webhook for workspace ${params.workspaceId}:`, JSON.stringify(body, null, 2));
+        console.log(`Received webhook for workspace ${workspaceId}:`, JSON.stringify(body, null, 2));
 
         // Basic acknowledgment to Meta
         // In a real implementation, you would queue this for processing
