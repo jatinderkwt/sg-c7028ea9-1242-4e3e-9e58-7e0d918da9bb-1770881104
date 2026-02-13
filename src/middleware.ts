@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -18,8 +19,8 @@ export async function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register')
   const isInstallerRoute = pathname.startsWith('/install')
 
-  // Get auth token from cookies
-  const token = request.cookies.get('auth-token')?.value
+  // Get auth token from session
+  const token = await getToken({ req: request })
 
   if (isProtectedRoute && !token) {
     // Redirect to login if accessing dashboard without token

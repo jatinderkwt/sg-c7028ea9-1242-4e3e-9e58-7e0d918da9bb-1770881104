@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 import bcrypt from 'bcryptjs'
-
-const prisma = new PrismaClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if already installed
-    const existingSettings = await prisma.systemSettings.findFirst()
+    const existingSettings = await db.systemSettings.findFirst()
     if (existingSettings?.isInstalled) {
       return NextResponse.json(
         { error: 'System already installed' },
@@ -29,7 +27,7 @@ export async function POST(request: NextRequest) {
     const hashedPassword = await bcrypt.hash(data.adminPassword, 10)
 
     // Create super admin user
-    const user = await prisma.user.create({
+    const user = await db.user.create({
       data: {
         name: data.adminName,
         email: data.adminEmail.toLowerCase(),
@@ -38,7 +36,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Create default workspace
-    const workspace = await prisma.workspace.create({
+    const workspace = await db.workspace.create({
       data: {
         name: 'Default Workspace',
         slug: 'default-workspace',
@@ -48,7 +46,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Add user to workspace as super admin
-    await prisma.workspaceMember.create({
+    await db.workspaceMember.create({
       data: {
         userId: user.id,
         workspaceId: workspace.id,
@@ -57,14 +55,14 @@ export async function POST(request: NextRequest) {
     })
 
     // Create workspace settings
-    await prisma.workspaceSettings.create({
+    await db.workspaceSettings.create({
       data: {
         workspaceId: workspace.id,
       },
     })
 
     // Create system settings
-    const systemSettings = await prisma.systemSettings.upsert({
+    const systemSettings = await db.systemSettings.upsert({
       where: { id: 'system' },
       create: {
         id: 'system',
@@ -87,7 +85,7 @@ export async function POST(request: NextRequest) {
 
     // Create default plans
     const plans = await Promise.all([
-      prisma.plan.create({
+      db.plan.create({
         data: {
           name: 'Starter',
           description: 'Perfect for getting started',
@@ -101,7 +99,7 @@ export async function POST(request: NextRequest) {
           displayOrder: 1,
         },
       }),
-      prisma.plan.create({
+      db.plan.create({
         data: {
           name: 'Growth',
           description: 'For growing teams',
@@ -115,7 +113,7 @@ export async function POST(request: NextRequest) {
           displayOrder: 2,
         },
       }),
-      prisma.plan.create({
+      db.plan.create({
         data: {
           name: 'Enterprise',
           description: 'Unlimited everything',

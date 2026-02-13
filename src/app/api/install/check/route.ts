@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { db } from '@/lib/db'
 
 export async function GET() {
   try {
@@ -14,9 +14,7 @@ export async function GET() {
     // Try to verify database connection
     if (process.env.DATABASE_URL) {
       try {
-        const prisma = new PrismaClient()
-        await prisma.$queryRaw`SELECT 1`
-        await prisma.$disconnect()
+        await db.$queryRaw`SELECT 1`
         checks.databaseConfigured = true
       } catch (dbError) {
         checks.databaseConfigured = false
