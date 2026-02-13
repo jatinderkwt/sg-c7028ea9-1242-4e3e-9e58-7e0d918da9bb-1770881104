@@ -1,7 +1,6 @@
-'use client'
-
 import Link from 'next/link'
 import { CheckCircle, MessageSquare, Zap, BarChart3, Users, Lock } from 'lucide-react'
+import { getLandingHero } from "@/lib/cms"
 
 const features = [
   {
@@ -89,7 +88,9 @@ const plans = [
   },
 ]
 
-export default function Home() {
+export default async function Home() {
+  const heroContent = await getLandingHero()
+
   return (
     <main>
       {/* Hero Section */}
@@ -97,26 +98,23 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              WhatsApp Business Made{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                Simple
-              </span>
+              {heroContent.headline}
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Manage customer conversations, automate responses, and grow your business with our all-in-one WhatsApp SaaS platform.
+              {heroContent.subheadline}
             </p>
             <div className="flex gap-4 justify-center">
               <Link
-                href="/register"
+                href={heroContent.ctaLink || "/register"}
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105"
               >
-                Start Free Trial (14 days)
+                {heroContent.ctaText}
               </Link>
               <Link
-                href="#features"
+                href={heroContent.secondaryCtaLink || "#features"}
                 className="px-8 py-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition"
               >
-                Learn More
+                {heroContent.secondaryCtaText || "Learn More"}
               </Link>
             </div>
             <p className="text-sm text-gray-500 mt-6">No credit card required • 14-day free trial</p>
@@ -213,8 +211,8 @@ export default function Home() {
               <div
                 key={index}
                 className={`rounded-lg overflow-hidden transition transform hover:scale-105 ${plan.featured
-                    ? 'ring-2 ring-blue-600 shadow-2xl md:scale-105'
-                    : 'bg-gray-50 shadow-md'
+                  ? 'ring-2 ring-blue-600 shadow-2xl md:scale-105'
+                  : 'bg-gray-50 shadow-md'
                   }`}
               >
                 <div className={`p-8 ${plan.featured ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' : ''}`}>
@@ -232,8 +230,8 @@ export default function Home() {
 
                   <button
                     className={`w-full py-3 rounded-lg font-semibold transition mb-8 ${plan.featured
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
                       }`}
                   >
                     {plan.cta}
