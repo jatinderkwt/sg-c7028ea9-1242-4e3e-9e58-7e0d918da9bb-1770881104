@@ -184,14 +184,14 @@ wabiz_new/
 ### Local Development
 - **Home**: http://localhost:3000
 - **Installer**: http://localhost:3000/install (if not installed)
-- **Login**: http://localhost:3000/auth/login
-- **Register**: http://localhost:3000/auth/register
+- **Login**: http://localhost:3000/login
+- **Register**: http://localhost:3000/register
 - **Dashboard**: http://localhost:3000/dashboard (after login)
 - **Marketing**: http://localhost:3000 (public pages)
 
 ### Default Routes
 - **Marketing**: `/`, `/features`, `/pricing`, `/about`, `/contact`
-- **Auth**: `/auth/login`, `/auth/register`, `/auth/forgot-password`
+- **Auth**: `/login`, `/register`, `/forgot-password`
 - **Installer**: `/install` (new installations)
 - **Dashboard**: `/dashboard/*` (all main app pages)
 

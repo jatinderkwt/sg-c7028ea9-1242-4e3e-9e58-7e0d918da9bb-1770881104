@@ -16,8 +16,8 @@ export default function AboutPage() {
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
           <p className="text-lg text-gray-600 leading-relaxed">
-            We believe every business deserves access to powerful communication tools. WaFiz makes WhatsApp Business 
-            management accessible, affordable, and easy for teams of all sizes. We're building the platform for modern 
+            We believe every business deserves access to powerful communication tools. WaFiz makes WhatsApp Business
+            management accessible, affordable, and easy for teams of all sizes. We're building the platform for modern
             customer communication.
           </p>
         </div>
@@ -78,7 +78,7 @@ export default function AboutPage() {
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Our Team</h2>
           <p className="text-lg text-gray-600 mb-8">
-            We're a team of passionate developers, designers, and customer success professionals dedicated to helping 
+            We're a team of passionate developers, designers, and customer success professionals dedicated to helping
             businesses communicate better with their customers.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -102,7 +102,7 @@ export default function AboutPage() {
           <h2 className="text-3xl font-bold mb-4">Ready to Join Us?</h2>
           <p className="text-lg text-blue-100 mb-8">Start managing your WhatsApp business communications today</p>
           <Link
-            href="/auth/register"
+            href="/register"
             className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg font-semibold hover:shadow-lg transition"
           >
             Start Free Trial

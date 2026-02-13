@@ -12,7 +12,7 @@ export default withAuth(
     const isInstallerRoute = pathname.startsWith('/install')
 
     if (isProtectedRoute && !token) {
-      return NextResponse.redirect(new URL('/auth/login', req.url))
+      return NextResponse.redirect(new URL('/login', req.url))
     }
 
     if ((isAuthRoute || isInstallerRoute) && token) {
