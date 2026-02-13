@@ -12,7 +12,11 @@ export async function GET(request: NextRequest) {
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'wabiz_webhook_verify'
 
     if (mode === 'subscribe' && token === verifyToken) {
-        return new NextResponse(challenge, { status: 200 })
+        console.log('WEBHOOK_VERIFIED');
+        return new Response(challenge, {
+            status: 200,
+            headers: { 'Content-Type': 'text/plain' }
+        });
     }
 
     return new NextResponse('Forbidden', { status: 403 })
