@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { inviteMember } from "@/actions/team"
 
+export const dynamic = 'force-dynamic'
+
 export default async function TeamSettings() {
     const session = await getServerSession(authOptions)
     if (!session?.user?.email) return null
@@ -35,30 +37,34 @@ export default async function TeamSettings() {
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                        {members.map((member) => (
+                        {members && members.length > 0 ? members.map((member) => (
                             <tr key={member.id}>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <div className="flex items-center">
                                         <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                                            {member.user.name?.charAt(0) || 'U'}
+                                            {member.user?.name?.charAt(0) || 'U'}
                                         </div>
-                                        <div className="ml-4 text-sm font-medium text-gray-900">{member.user.name}</div>
+                                        <div className="ml-4 text-sm font-medium text-gray-900">{member.user?.name || 'Unknown'}</div>
                                     </div>
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.user.email}</td>
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{member.user?.email || 'No Email'}</td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${member.role === 'SUPER_ADMIN' ? 'bg-purple-100 text-purple-800' :
-                                            member.role === 'MANAGER' ? 'bg-blue-100 text-blue-800' :
-                                                'bg-green-100 text-green-800'
+                                        member.role === 'MANAGER' ? 'bg-blue-100 text-blue-800' :
+                                            'bg-green-100 text-green-800'
                                         }`}>
                                         {member.role}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {new Date(member.joinedAt).toLocaleDateString()}
+                                    {member.joinedAt ? new Date(member.joinedAt).toLocaleDateString() : '-'}
                                 </td>
                             </tr>
-                        ))}
+                        )) : (
+                            <tr>
+                                <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">No members found</td>
+                            </tr>
+                        )}
                     </tbody>
                 </table>
             </div>

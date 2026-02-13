@@ -1,3 +1,5 @@
+import { timezones, currencies } from "@/lib/constants"
+
 export default function AdminSettingsPage() {
     return (
         <div>
@@ -12,6 +14,22 @@ export default function AdminSettingsPage() {
                     <div>
                         <label className="block text-sm font-medium text-gray-700">Support Email</label>
                         <input type="email" className="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Default Currency</label>
+                        <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                            {currencies.map(c => (
+                                <option key={c.code} value={c.code}>{c.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Default Timezone</label>
+                        <select className="mt-1 block w-full border-gray-300 rounded-md shadow-sm border p-2">
+                            {timezones.map(tz => (
+                                <option key={tz} value={tz}>{tz}</option>
+                            ))}
+                        </select>
                     </div>
                     <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Save Changes</button>
                 </div>

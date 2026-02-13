@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { timezones, currencies } from '@/lib/constants'
 
 type InstallerStep = 'check' | 'database' | 'admin' | 'settings' | 'complete'
 
@@ -320,19 +321,17 @@ export default function InstallerPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Currency</label>
                   <select name="currency" value={formData.currency} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option>USD</option>
-                    <option>EUR</option>
-                    <option>GBP</option>
-                    <option>INR</option>
+                    {currencies.map(c => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Default Timezone</label>
                   <select name="timezone" value={formData.timezone} onChange={handleInputChange} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    <option>UTC</option>
-                    <option>Asia/Kolkata</option>
-                    <option>America/New_York</option>
-                    <option>Europe/London</option>
+                    {timezones.map(tz => (
+                      <option key={tz} value={tz}>{tz}</option>
+                    ))}
                   </select>
                 </div>
                 <div>

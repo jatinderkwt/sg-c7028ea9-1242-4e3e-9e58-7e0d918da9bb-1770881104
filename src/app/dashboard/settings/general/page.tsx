@@ -1,4 +1,4 @@
-'use client'
+import { timezones } from "@/lib/constants"
 
 export default function GeneralSettings() {
     return (
@@ -16,8 +16,9 @@ export default function GeneralSettings() {
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
                             <select className="w-full px-4 py-2 border border-gray-300 rounded-lg">
-                                <option>UTC</option>
-                                <option>Asia/Kolkata</option>
+                                {timezones.map(tz => (
+                                    <option key={tz} value={tz}>{tz}</option>
+                                ))}
                             </select>
                         </div>
                     </div>

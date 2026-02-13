@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import { Menu, X, LogOut, Settings, Users, LayoutDashboard, MessageSquare, Megaphone, GitBranch, CreditCard, FileText } from 'lucide-react'
+import { Menu, X, LogOut, Settings, Users, LayoutDashboard, MessageSquare, Megaphone, GitBranch, CreditCard, FileText, BarChart2, UserCog, ClipboardList, Calendar } from 'lucide-react'
 
 export default function DashboardLayout({
   children,
@@ -29,11 +29,15 @@ export default function DashboardLayout({
 
   const navItems = [
     { href: '/dashboard', icon: LayoutDashboard, label: 'Overview', exact: true },
+    { href: '/dashboard/analytics', icon: BarChart2, label: 'Analytics' },
     { href: '/dashboard/inbox', icon: MessageSquare, label: 'Team Inbox' },
     { href: '/dashboard/contacts', icon: Users, label: 'Contacts' },
     { href: '/dashboard/campaigns', icon: Megaphone, label: 'Campaigns' },
+    { href: '/dashboard/scheduled', icon: Calendar, label: 'Scheduled' },
     { href: '/dashboard/automation', icon: GitBranch, label: 'Automation' },
     { href: '/dashboard/templates', icon: FileText, label: 'Templates' },
+    { href: '/dashboard/users', icon: UserCog, label: 'Team Members' },
+    { href: '/dashboard/audit-logs', icon: ClipboardList, label: 'Audit Logs' },
     { href: '/dashboard/billing', icon: CreditCard, label: 'Billing & Usage' },
     { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ]
