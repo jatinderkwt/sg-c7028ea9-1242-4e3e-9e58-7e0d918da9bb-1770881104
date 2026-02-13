@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'
 export async function POST(req: Request) {
     try {
         const body = await req.json()
-        const { email, password, name, companyName } = body
+        const { email, password, name, companyName, compliance, whatsapp } = body
 
         if (!email || !password || !name) {
             return NextResponse.json({ message: 'Missing required fields' }, { status: 400 })
@@ -36,6 +36,7 @@ export async function POST(req: Request) {
             data: {
                 name: companyName || `${name}'s Workspace`,
                 slug: companyName ? companyName.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + Math.floor(Math.random() * 1000) : `workspace-${user.id.slice(0, 8)}`,
+                country: compliance?.country || null,
             }
         })
 
@@ -47,6 +48,39 @@ export async function POST(req: Request) {
                 role: 'SUPER_ADMIN'
             }
         })
+
+        // Create Compliance record if data provided
+        if (compliance) {
+            await db.compliance.create({
+                data: {
+                    workspaceId: workspace.id,
+                    legalName: companyName,
+                    registrationNumber: compliance.registrationNumber,
+                    taxId: compliance.taxId,
+                    country: compliance.country,
+                    website: compliance.website,
+                    address: compliance.address,
+                    status: 'PENDING'
+                }
+            })
+        }
+
+        // Create WhatsApp settings if BYOA data provided
+        if (whatsapp && whatsapp.phoneNumberId && whatsapp.accessToken) {
+            await db.whatsAppNumber.create({
+                data: {
+                    workspaceId: workspace.id,
+                    phoneNumberId: whatsapp.phoneNumberId,
+                    businessAccountId: whatsapp.wabaId || "", // Added this
+                    accessToken: whatsapp.accessToken,
+                    displayName: companyName || "Primary Number",
+                    phoneNumber: "", // User will fill this in settings
+                    isVerified: true,
+                    isActive: true,
+                    apiVersion: "v18.0"
+                }
+            })
+        }
 
         // Assign Starter Plan
         const starterPlan = await db.plan.findFirst({

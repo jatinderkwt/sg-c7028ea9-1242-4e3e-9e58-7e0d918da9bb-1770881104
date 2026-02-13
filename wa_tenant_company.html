@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tenant Company Registration - WABA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .step-inactive { display: none; }
+        .progress-bar { transition: width 0.3s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto px-4 py-12">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-bold text-gray-800">Company Registration</h1>
+            <p class="text-gray-600 mt-2 text-lg">Complete your ISO-level business verification for Meta WABA access.</p>
+        </div>
+
+        <!-- Progress Stepper -->
+        <div class="mb-12">
+            <div class="flex justify-between mb-2">
+                <span id="step-label" class="text-sm font-semibold text-blue-600 uppercase tracking-wider">Step 1: Account Setup</span>
+                <span id="step-counter" class="text-sm font-medium text-gray-500">25% Complete</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2">
+                <div id="progress-bar" class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 25%"></div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="regForm" class="bg-white rounded-2xl shadow-xl p-8 md:p-12 border border-gray-100">
+            
+            <!-- STEP 1: Basic Account -->
+            <div id="step1" class="step-content">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-user-plus text-blue-500"></i> Account Details
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Admin Full Name</label>
+                        <input type="text" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Work Email</label>
+                        <input type="email" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="john@company.com">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="••••••••">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: ISO Business Identity -->
+            <div id="step2" class="step-content step-inactive">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-building text-blue-500"></i> Business Identity (ISO Standard)
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Legal Business Name</label>
+                        <p class="text-xs text-gray-500 mb-1">Must exactly match your tax registration documents.</p>
+                        <input type="text" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Acme Corp Intl.">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Registered Country</label>
+                        <select required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <option value="">Select Country (ISO 3166)</option>
+                            <option value="US">United States</option>
+                            <option value="GB">United Kingdom</option>
+                            <option value="AE">United Arab Emirates</option>
+                            <option value="IN">India</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Business Website</label>
+                        <input type="url" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="https://www.acme.com">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Full Registered Address</label>
+                        <textarea required rows="3" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Street name, Building, City, State, Zip"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: KYB Document Upload -->
+            <div id="step3" class="step-content step-inactive">
+                <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-file-shield text-blue-500"></i> Compliance Vault (KYB)
+                </h2>
+                <div class="space-y-6">
+                    <div class="p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+                        <i class="fa-solid fa-circle-info text-blue-600 mt-1"></i>
+                        <p class="text-sm text-blue-800">Upload high-resolution scans. Meta requires these to verify your Business Account (WABA).</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="border-2 border-dashed border-gray-300 p-6 rounded-xl text-center hover:border-blue-500 transition-colors">
+                            <i class="fa-solid fa-id-card text-2xl text-gray-400 mb-2"></i>
+                            <label class="block text-sm font-bold text-gray-700">Business License</label>
+                            <p class="text-xs text-gray-500 mb-4">PDF, JPG, PNG (Max 5MB)</p>
+                            <input type="file" required class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                        <div class="border-2 border-dashed border-gray-300 p-6 rounded-xl text-center hover:border-blue-500 transition-colors">
+                            <i class="fa-solid fa-receipt text-2xl text-gray-400 mb-2"></i>
+                            <label class="block text-sm font-bold text-gray-700">Tax ID / VAT Certificate</label>
+                            <p class="text-xs text-gray-500 mb-4">Official government doc</p>
+                            <input type="file" required class="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Tax ID / GST / EIN Number</label>
+                        <input type="text" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Enter Registration Number">
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Trial Logic (BYOA) -->
+            <div id="step4" class="step-content step-inactive">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-vial text-blue-500"></i> Instant Trial & Integration
+                </h2>
+                
+                <div class="bg-gray-50 p-6 rounded-xl border mb-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="font-bold">Already have a WABA?</h3>
+                            <p class="text-sm text-gray-600">Toggle this to skip our provisioning and use your own API.</p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="byoaToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <div id="byoaFields" class="mt-6 space-y-4 hidden">
+                        <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <p class="text-xs text-yellow-800"><strong>Note:</strong> You will need your Meta Permanent Access Token and Phone Number ID to start the trial instantly.</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Meta Phone Number ID</label>
+                            <input type="text" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="1058293xxxxxx">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">WABA Access Token</label>
+                            <input type="password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="EAAG... (Permanent Token)">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 mb-6">
+                    <input type="checkbox" required id="terms" class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                    <label for="terms" class="text-sm text-gray-600">I agree to the <a href="#" class="text-blue-600 underline">Terms of Service</a> and Data Processing Agreement.</label>
+                </div>
+            </div>
+
+            <!-- Form Navigation Buttons -->
+            <div class="flex justify-between mt-12 pt-6 border-t border-gray-100">
+                <button type="button" id="prevBtn" class="px-6 py-3 text-gray-500 font-semibold hover:text-gray-800 transition-colors invisible">
+                    Back
+                </button>
+                <button type="button" id="nextBtn" class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-lg hover:shadow-blue-200">
+                    Continue
+                </button>
+            </div>
+        </form>
+
+        <!-- Footer -->
+        <p class="text-center text-gray-500 text-sm mt-8">
+            <i class="fa-solid fa-lock mr-1"></i> SSL Encrypted Registration. Data processed in accordance with ISO 27001.
+        </p>
+    </div>
+
+    <script>
+        const steps = ['step1', 'step2', 'step3', 'step4'];
+        let currentStep = 0;
+
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const progressBar = document.getElementById('progress-bar');
+        const stepLabel = document.getElementById('step-label');
+        const stepCounter = document.getElementById('step-counter');
+        const byoaToggle = document.getElementById('byoaToggle');
+        const byoaFields = document.getElementById('byoaFields');
+
+        // BYOA Toggle Logic
+        byoaToggle.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                byoaFields.classList.remove('hidden');
+            } else {
+                byoaFields.classList.add('hidden');
+            }
+        });
+
+        // Navigation Logic
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                document.getElementById(steps[currentStep]).classList.add('step-inactive');
+                currentStep++;
+                document.getElementById(steps[currentStep]).classList.remove('step-inactive');
+                updateUI();
+            } else {
+                // Final Submission
+                const btnContent = nextBtn.innerHTML;
+                nextBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...';
+                nextBtn.disabled = true;
+                
+                // Simulate backend validation
+                setTimeout(() => {
+                    alert('Registration Submitted Successfully! Our Super Admin will review your ISO documents within 24 hours.');
+                    nextBtn.innerHTML = btnContent;
+                    nextBtn.disabled = false;
+                }, 2000);
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                document.getElementById(steps[currentStep]).classList.add('step-inactive');
+                currentStep--;
+                document.getElementById(steps[currentStep]).classList.remove('step-inactive');
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            // Update Progress
+            const progress = ((currentStep + 1) / steps.length) * 100;
+            progressBar.style.width = `${progress}%`;
+            stepCounter.innerText = `${progress}% Complete`;
+
+            // Update Labels
+            const labels = [
+                'Step 1: Account Setup',
+                'Step 2: Business Identity',
+                'Step 3: Compliance Vault',
+                'Step 4: Trial & Activation'
+            ];
+            stepLabel.innerText = labels[currentStep];
+
+            // Toggle Button Visibility
+            prevBtn.classList.toggle('invisible', currentStep === 0);
+            nextBtn.innerText = currentStep === steps.length - 1 ? 'Complete Registration' : 'Continue';
+        }
+    </script>
+</body>
+</html>
