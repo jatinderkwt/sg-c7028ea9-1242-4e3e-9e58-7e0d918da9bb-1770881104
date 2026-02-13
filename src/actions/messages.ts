@@ -20,6 +20,15 @@ export async function sendMessage(conversationId: string, content: string) {
 
     if (!conversation) throw new Error("Conversation not found")
 
+    // --- 24-Hour Window Check (Meta Policy) ---
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const isWithinWindow = conversation.lastMessageAt >= twentyFourHoursAgo
+
+    // In production, you'd only allow templates if outside window
+    if (!isWithinWindow) {
+        console.warn('OUTSIDE_24H_WINDOW: Content might be blocked by Meta unless it is a template')
+    }
+
     try {
         // 1. Send to Meta API
         const metaResult = await sendWhatsAppMessage(

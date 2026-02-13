@@ -32,6 +32,21 @@ export async function sendWhatsAppMessage(
             name: templateName,
             language: { code: languageCode }
         };
+    } else if (type as string === 'IMAGE') {
+        payload.type = "image";
+        payload.image = { link: content };
+    } else if (type as string === 'INTERACTIVE') {
+        payload.type = "interactive";
+        payload.interactive = {
+            type: "button",
+            body: { text: content },
+            action: {
+                buttons: [
+                    { type: "reply", reply: { id: "yes", title: "Yes" } },
+                    { type: "reply", reply: { id: "no", title: "No" } }
+                ]
+            }
+        };
     }
 
     const response = await fetch(url, {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import crypto from "crypto"
 
 export async function GET(request: NextRequest) {
     // Webhook verification for Meta
@@ -24,7 +25,22 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
-        const body = await request.json()
+        const bodyText = await request.text()
+        const body = JSON.parse(bodyText)
+
+        // --- Security: Validate Meta Signature ---
+        const signature = request.headers.get('x-hub-signature-256')
+        const appSecret = process.env.META_APP_SECRET
+
+        if (signature && appSecret) {
+            const hmac = crypto.createHmac('sha256', appSecret)
+            const digest = 'sha256=' + hmac.update(bodyText).digest('hex')
+            if (signature !== digest) {
+                console.error('WEBHOOK_SIGNATURE_MISMATCH')
+                return new NextResponse('Invalid Signature', { status: 401 })
+            }
+        }
+
         console.log('WHATSAPP_WEBHOOK_RECEIVED', JSON.stringify(body, null, 2))
 
         // Log the raw webhook event for debugging
@@ -117,6 +133,14 @@ export async function POST(request: NextRequest) {
                 } else if (msg.type === 'image') {
                     content = "[Image]"
                     type = "IMAGE"
+                } else if (msg.type === 'interactive') {
+                    if (msg.interactive?.type === 'button_reply') {
+                        content = `Button Clicked: ${msg.interactive.button_reply?.title} (${msg.interactive.button_reply?.id})`
+                        type = "TEXT"
+                    } else {
+                        content = "[Interactive Message]"
+                        type = "TEXT"
+                    }
                 } else {
                     content = `[${msg.type} message]`
                     type = "TEXT"
