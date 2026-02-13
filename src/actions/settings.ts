@@ -59,5 +59,4 @@ export async function saveGeneralSettings(formData: FormData) {
     })
 
     revalidatePath("/dashboard/settings/general")
-    return { success: true }
 }
