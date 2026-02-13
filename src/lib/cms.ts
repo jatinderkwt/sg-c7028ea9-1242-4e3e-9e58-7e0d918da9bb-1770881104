@@ -44,7 +44,7 @@ export async function getCmsContent<T>(key: string, defaultContent: T): Promise<
             return cmsItem.content as unknown as T
         }
     } catch (error) {
-        console.error(`Failed to fetch CMS content for key: ${key}`, error)
+        console.warn(`Failed to fetch CMS content for key: ${key}. Using default content.`, error)
     }
 
     return defaultContent

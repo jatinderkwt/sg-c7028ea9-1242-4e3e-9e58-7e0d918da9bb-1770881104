@@ -156,6 +156,9 @@ model WhatsAppNumber {
   webhookToken        String?
   isVerified          Boolean   @default(false)
   isActive            Boolean   @default(true)
+  apiVersion          String    @default("v18.0")
+  appId               String?   // Meta App ID for BYOA
+  appSecret           String?   // Meta App Secret for BYOA
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -545,6 +548,8 @@ model SystemSettings {
   defaultTimezone     String    @default("UTC")
   supportEmail        String?
   supportPhone        String?
+  customDomain        String?   @default("app.wafiz.com")
+  brandColor          String?   @default("#2563EB")
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 

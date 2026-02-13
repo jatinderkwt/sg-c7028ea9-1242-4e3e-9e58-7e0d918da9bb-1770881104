@@ -3,21 +3,37 @@ import { db } from "@/lib/db"
 import { Building, Users, Calendar, DollarSign, TrendingUp } from 'lucide-react'
 
 export default async function AdminDashboard() {
-    const [
-        companiesCount,
-        usersCount,
-        activeSubsCount
-    ] = await Promise.all([
-        db.workspace.count(),
-        db.user.count(),
-        db.subscription.count({ where: { status: 'ACTIVE' } })
-    ])
+    // Helper to safely fetch counts
+    const safeCount = async (fn: () => Promise<number>) => {
+        try {
+            return await fn();
+        } catch (error) {
+            console.log("Failed to fetch count:", error);
+            return 0;
+        }
+    };
 
-    const recentCompanies = await db.workspace.findMany({
-        take: 5,
-        orderBy: { createdAt: 'desc' },
-        include: { _count: { select: { members: true } } }
-    })
+    // Helper to safely fetch data
+    const safeFetch = async <T,>(fn: () => Promise<T>, fallback: T) => {
+        try {
+            return await fn();
+        } catch (error) {
+            console.log("Failed to fetch data:", error);
+            return fallback;
+        }
+    };
+
+    const companiesCount = await safeCount(() => db.workspace.count());
+    const usersCount = await safeCount(() => db.user.count());
+    const activeSubsCount = await safeCount(() => db.subscription.count({ where: { status: 'ACTIVE' } }));
+
+    let recentCompanies: any[] = await safeFetch(async () => {
+        return await db.workspace.findMany({
+            take: 5,
+            orderBy: { createdAt: 'desc' },
+            include: { _count: { select: { members: true } } }
+        });
+    }, []);
 
     return (
         <div className="space-y-8">

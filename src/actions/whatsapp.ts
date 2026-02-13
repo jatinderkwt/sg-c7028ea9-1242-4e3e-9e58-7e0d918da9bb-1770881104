@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import crypto from "crypto"
 
 export async function saveWhatsAppSettings(formData: FormData) {
     const session = await getServerSession(authOptions)
@@ -43,6 +44,7 @@ export async function saveWhatsAppSettings(formData: FormData) {
     })
 
     if (existingNumber) {
+        const currentToken = existingNumber.webhookToken || crypto.randomBytes(24).toString('hex')
         await db.whatsAppNumber.update({
             where: { id: existingNumber.id },
             data: {
@@ -51,8 +53,12 @@ export async function saveWhatsAppSettings(formData: FormData) {
                 accessToken,
                 phoneNumber: phoneNumber || existingNumber.phoneNumber,
                 displayName,
-                isVerified: true, // Assuming manual entry implies verified or we trust the admin relative to internal usage
-                isActive: true
+                webhookToken: currentToken,
+                isVerified: true,
+                isActive: true,
+                appId: formData.get("appId") as string,
+                appSecret: formData.get("appSecret") as string,
+                apiVersion: formData.get("apiVersion") as string || "v18.0"
             }
         })
     } else {
@@ -64,8 +70,12 @@ export async function saveWhatsAppSettings(formData: FormData) {
                 accessToken,
                 phoneNumber: phoneNumber || "",
                 displayName,
+                webhookToken: crypto.randomBytes(24).toString('hex'), // Generate new token
                 isVerified: true,
-                isActive: true
+                isActive: true,
+                appId: formData.get("appId") as string,
+                appSecret: formData.get("appSecret") as string,
+                apiVersion: formData.get("apiVersion") as string || "v18.0"
             }
         })
     }

@@ -1,17 +1,23 @@
 import { db } from "@/lib/db"
 
 export default async function AdminUsersPage() {
-    const users = await db.user.findMany({
-        orderBy: { createdAt: 'desc' },
-        include: {
-            // Include memberships to show which company they belong to
-            workspaces: {
-                include: {
-                    workspace: true
+    let users: any[] = [];
+    try {
+        users = await db.user.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: {
+                // Include memberships to show which company they belong to
+                workspaces: {
+                    include: {
+                        workspace: true
+                    }
                 }
             }
-        }
-    })
+        });
+    } catch (error) {
+        console.error("Failed to fetch users:", error);
+        // Fallback or error handling logic
+    }
 
     return (
         <div>
@@ -47,7 +53,7 @@ export default async function AdminUsersPage() {
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     <div className="flex flex-col gap-1">
-                                        {user.workspaces.map(m => (
+                                        {user.workspaces?.map((m: any) => (
                                             <span key={m.workspaceId} className="text-xs bg-blue-50 text-blue-700 px-1 rounded border border-blue-100 w-fit">
                                                 {m.workspace.name} ({m.role})
                                             </span>

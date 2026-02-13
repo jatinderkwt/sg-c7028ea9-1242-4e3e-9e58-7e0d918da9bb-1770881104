@@ -2,14 +2,21 @@ import Link from 'next/link'
 import { db } from "@/lib/db"
 
 export default async function CompaniesPage() {
-    const workspaces = await db.workspace.findMany({
-        include: {
-            _count: {
-                select: { members: true }
-            }
-        },
-        orderBy: { createdAt: 'desc' }
-    })
+    let workspaces: any[] = [];
+
+    try {
+        workspaces = await db.workspace.findMany({
+            include: {
+                _count: {
+                    select: { members: true }
+                }
+            },
+            orderBy: { createdAt: 'desc' }
+        });
+    } catch (error) {
+        console.error("Failed to fetch companies:", error);
+        // Return empty array gracefully
+    }
 
     return (
         <div>

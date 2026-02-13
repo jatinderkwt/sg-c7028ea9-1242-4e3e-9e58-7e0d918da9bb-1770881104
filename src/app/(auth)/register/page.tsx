@@ -63,7 +63,7 @@ export default function RegisterPage() {
       }
 
       // Redirect to dashboard or login
-      router.push('/auth/login?registered=true')
+      router.push('/login?registered=true')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed')
     } finally {
@@ -171,7 +171,7 @@ export default function RegisterPage() {
             <Link href="/terms" className="text-blue-600 hover:underline">
               Terms of Service
             </Link>
-            {' and '} 
+            {' and '}
             <Link href="/privacy" className="text-blue-600 hover:underline">
               Privacy Policy
             </Link>
@@ -188,7 +188,7 @@ export default function RegisterPage() {
 
         <div className="text-center text-sm text-gray-600">
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-blue-600 hover:underline">
             Sign In
           </Link>
         </div>
