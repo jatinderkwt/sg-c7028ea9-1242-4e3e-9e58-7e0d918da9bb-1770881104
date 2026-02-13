@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn, getSession } from 'next-auth/react'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -17,22 +18,26 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
       })
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.message || 'Login failed')
+      if (result?.error) {
+        throw new Error('Invalid email or password')
       }
 
-      const data = await response.json()
-      localStorage.setItem('token', data.token)
-      router.push('/dashboard')
+      if (result?.ok) {
+        // Check role and redirect
+        const session = await getSession()
+        if (session?.user?.role === 'SUPER_ADMIN') {
+          router.push('/admin')
+        } else {
+          router.push('/dashboard')
+        }
+        router.refresh()
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed')
     } finally {

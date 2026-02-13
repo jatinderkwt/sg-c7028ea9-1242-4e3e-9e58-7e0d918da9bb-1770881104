@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { signOut, useSession } from 'next-auth/react'
 import { Menu, X, LogOut, Settings, Users, BarChart3, MessageSquare } from 'lucide-react'
 
 export default function DashboardLayout({
@@ -14,17 +15,16 @@ export default function DashboardLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
 
+  const { data: session, status } = useSession()
+
   useEffect(() => {
-    // Check if user is logged in
-    const token = localStorage.getItem('token')
-    if (!token) {
-      router.push('/auth/login')
+    if (status === 'unauthenticated') {
+      router.push('/login')
     }
-  }, [router])
+  }, [status, router])
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    router.push('/auth/login')
+    signOut({ callbackUrl: '/login' })
   }
 
   const navItems = [
@@ -41,9 +41,8 @@ export default function DashboardLayout({
     <div className="h-screen flex overflow-hidden bg-gray-100">
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transition-transform duration-300 transform ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } md:translate-x-0 md:static md:inset-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white transition-transform duration-300 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          } md:translate-x-0 md:static md:inset-0`}
       >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 bg-gray-800">

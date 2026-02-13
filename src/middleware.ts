@@ -16,7 +16,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if user is trying to access protected routes
   const isProtectedRoute = pathname.startsWith('/dashboard')
-  const isAuthRoute = pathname.startsWith('/auth') || pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isAuthRoute = ['/login', '/register', '/forgot-password'].includes(pathname)
   const isInstallerRoute = pathname.startsWith('/install')
 
   // Get auth token from session
@@ -24,11 +24,14 @@ export async function middleware(request: NextRequest) {
 
   if (isProtectedRoute && !token) {
     // Redirect to login if accessing dashboard without token
-    return NextResponse.redirect(new URL('/auth/login', request.url))
+    return NextResponse.redirect(new URL('/login', request.url))
   }
 
   if ((isAuthRoute || isInstallerRoute) && token) {
-    // Redirect to dashboard if already logged in and trying to access auth routes
+    // Redirect based on role
+    if (token.role === 'SUPER_ADMIN') {
+      return NextResponse.redirect(new URL('/admin', request.url))
+    }
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 

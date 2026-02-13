@@ -19,7 +19,7 @@ export default function InstallerPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checks, setChecks] = useState<SystemChecks | null>(null)
-  
+
   const [formData, setFormData] = useState({
     // Database
     dbHost: 'localhost',
@@ -27,12 +27,12 @@ export default function InstallerPage() {
     dbName: 'wabiz_db',
     dbUser: 'postgres',
     dbPassword: '',
-    
+
     // Admin user
     adminName: '',
     adminEmail: '',
     adminPassword: '',
-    
+
     // Platform settings
     platformName: 'WaFiz',
     currency: 'USD',
@@ -51,7 +51,7 @@ export default function InstallerPage() {
         console.error('Failed to load system checks:', err)
       }
     }
-    
+
     loadChecks()
   }, [])
 
@@ -65,7 +65,7 @@ export default function InstallerPage() {
 
   const handleStepChange = async (step: InstallerStep) => {
     setError(null)
-    
+
     if (step === 'database' && currentStep === 'check') {
       setLoading(true)
       try {
@@ -76,7 +76,7 @@ export default function InstallerPage() {
         }
         const data = await response.json()
         setChecks(data.checks)
-        
+
         if (!data.checks.databaseConfigured) {
           throw new Error(data.checks.databaseError || 'Database is not properly configured. Please configure it manually.')
         }
@@ -111,7 +111,7 @@ export default function InstallerPage() {
 
       setCurrentStep('complete')
       setTimeout(() => {
-        router.push('/auth/login')
+        router.push('/login')
       }, 2000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Installation failed')
@@ -137,9 +137,8 @@ export default function InstallerPage() {
               {(['check', 'database', 'admin', 'settings', 'complete'] as const).map((step, idx) => (
                 <div key={step} className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${
-                      step === currentStep ? 'bg-blue-600 text-white' : step < currentStep === false ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'
-                    }`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm ${step === currentStep ? 'bg-blue-600 text-white' : step < currentStep === false ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-600'
+                      }`}
                   >
                     {idx + 1}
                   </div>

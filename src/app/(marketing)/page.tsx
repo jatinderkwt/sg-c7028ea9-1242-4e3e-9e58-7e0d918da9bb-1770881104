@@ -107,7 +107,7 @@ export default function Home() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link
-                href="/auth/register"
+                href="/register"
                 className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg font-semibold hover:shadow-lg transition transform hover:scale-105"
               >
                 Start Free Trial (14 days)
@@ -212,11 +212,10 @@ export default function Home() {
             {plans.map((plan, index) => (
               <div
                 key={index}
-                className={`rounded-lg overflow-hidden transition transform hover:scale-105 ${
-                  plan.featured
+                className={`rounded-lg overflow-hidden transition transform hover:scale-105 ${plan.featured
                     ? 'ring-2 ring-blue-600 shadow-2xl md:scale-105'
                     : 'bg-gray-50 shadow-md'
-                }`}
+                  }`}
               >
                 <div className={`p-8 ${plan.featured ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' : ''}`}>
                   <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
@@ -232,11 +231,10 @@ export default function Home() {
                   </div>
 
                   <button
-                    className={`w-full py-3 rounded-lg font-semibold transition mb-8 ${
-                      plan.featured
+                    className={`w-full py-3 rounded-lg font-semibold transition mb-8 ${plan.featured
                         ? 'bg-blue-600 text-white hover:bg-blue-700'
                         : 'border border-blue-600 text-blue-600 hover:bg-blue-50'
-                    }`}
+                      }`}
                   >
                     {plan.cta}
                   </button>
@@ -244,9 +242,8 @@ export default function Home() {
                   <ul className="space-y-4">
                     {plan.features.map((feature, idx) => (
                       <li key={idx} className="flex items-start gap-3">
-                        <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-                          plan.featured ? 'text-blue-600' : 'text-green-600'
-                        }`} />
+                        <CheckCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${plan.featured ? 'text-blue-600' : 'text-green-600'
+                          }`} />
                         <span className={plan.featured ? 'text-gray-700' : 'text-gray-600'}>
                           {feature}
                         </span>

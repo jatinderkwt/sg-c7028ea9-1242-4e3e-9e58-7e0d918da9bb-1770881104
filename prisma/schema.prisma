@@ -2,7 +2,9 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  engineType    = "binary"
+  binaryTargets = ["native", "windows"]
 }
 
 datasource db {
@@ -26,8 +28,14 @@ model User {
   workspaces    WorkspaceMember[]
   sessions      Session[]
   tokens        Token[]
+  role          GlobalRole @default(USER)
 
   @@index([email])
+}
+
+enum GlobalRole {
+  SUPER_ADMIN
+  USER
 }
 
 model Session {

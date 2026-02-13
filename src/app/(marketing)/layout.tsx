@@ -19,7 +19,7 @@ export default function MarketingLayout({
             <Link href="/" className="text-2xl font-bold text-blue-600">
               WaFiz
             </Link>
-            
+
             <div className="hidden md:flex gap-8">
               <Link href="/" className="text-gray-600 hover:text-gray-900">
                 Home
@@ -39,10 +39,10 @@ export default function MarketingLayout({
             </div>
 
             <div className="flex gap-4">
-              <Link href="/auth/login" className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
+              <Link href="/login" className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition">
                 Sign In
               </Link>
-              <Link href="/auth/register" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <Link href="/register" className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 Start Free Trial
               </Link>
             </div>
@@ -89,7 +89,7 @@ export default function MarketingLayout({
               </ul>
             </div>
           </div>
-          
+
           <div className="border-t border-gray-800 pt-8 text-center text-sm text-gray-400">
             <p>&copy; 2026 WaFiz. All rights reserved.</p>
           </div>

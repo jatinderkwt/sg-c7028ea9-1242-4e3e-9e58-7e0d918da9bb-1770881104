@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
         name: data.adminName,
         email: data.adminEmail.toLowerCase(),
         password: hashedPassword,
+        role: 'SUPER_ADMIN',
       },
     })
 
